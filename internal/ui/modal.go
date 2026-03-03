@@ -246,33 +246,33 @@ func (m *Modal) renderHints(width int) string {
 	var hints string
 	switch m.Type {
 	case types.ModalDelete:
-		hints = DefaultTheme.KeyHighlight.Render("Enter") +
+		hints = DefaultTheme.KeyHighlight.Render("enter") +
 			DefaultTheme.KeyHintStyle.Render(" 确认删除  ") +
-			DefaultTheme.KeyHighlight.Render("Esc") +
+			DefaultTheme.KeyHighlight.Render("esc") +
 			DefaultTheme.KeyHintStyle.Render(" 取消")
 	case types.ModalError:
-		hints = DefaultTheme.KeyHighlight.Render("Enter/Esc") +
+		hints = DefaultTheme.KeyHighlight.Render("enter/esc") +
 			DefaultTheme.KeyHintStyle.Render(" 关闭")
 	case types.ModalProgress:
 		if m.Progress != nil && m.Progress.IsFinish {
-			hints = DefaultTheme.KeyHighlight.Render("Enter/Esc") +
+			hints = DefaultTheme.KeyHighlight.Render("enter/esc") +
 				DefaultTheme.KeyHintStyle.Render(" 关闭")
 		} else {
 			hints = DefaultTheme.SubduedStyle.Render("操作进行中...")
 		}
 	case types.ModalSettings:
-		hints = DefaultTheme.KeyHighlight.Render("Enter") +
+		hints = DefaultTheme.KeyHighlight.Render("enter") +
 			DefaultTheme.KeyHintStyle.Render(" 确认  ") +
-			DefaultTheme.KeyHighlight.Render("Esc") +
+			DefaultTheme.KeyHighlight.Render("esc") +
 			DefaultTheme.KeyHintStyle.Render(" 取消  ") +
-			DefaultTheme.KeyHighlight.Render("Space") +
+			DefaultTheme.KeyHighlight.Render("space") +
 			DefaultTheme.KeyHintStyle.Render(" 切换  ") +
 			DefaultTheme.KeyHighlight.Render("↑↓") +
 			DefaultTheme.KeyHintStyle.Render(" 选择")
 	default:
-		hints = DefaultTheme.KeyHighlight.Render("Enter") +
+		hints = DefaultTheme.KeyHighlight.Render("enter") +
 			DefaultTheme.KeyHintStyle.Render(" 确认  ") +
-			DefaultTheme.KeyHighlight.Render("Esc") +
+			DefaultTheme.KeyHighlight.Render("esc") +
 			DefaultTheme.KeyHintStyle.Render(" 取消")
 	}
 

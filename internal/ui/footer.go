@@ -32,32 +32,32 @@ func (f *Footer) Render() string {
 
 	if f.IsSearching {
 		line1 = f.renderKeys([]keyHint{
-			{"Enter", "确认"},
-			{"Esc", "取消搜索"},
+			{"enter", "确认"},
+			{"esc", "取消搜索"},
 			{"↑↓", "选择"},
 		})
 		line2 = f.renderKeys([]keyHint{
-			{"Backspace", "删除字符"},
+			{"backspace", "删除字符"},
 		})
 	} else {
 		line1 = f.renderKeys([]keyHint{
 			{"←", "上一级"},
 			{"→", "进入"},
-			{"Enter", "打开"},
-			{"Space", "多选"},
-			{"Tab", "切换窗口"},
+			{"enter", "打开"},
+			{"space", "多选"},
+			{"tab", "切换窗口"},
 			{"/", "搜索"},
-			{"A", "全选"},
+			{"a", "全选"},
 		})
 		line2 = f.renderKeys([]keyHint{
-			{"Del", "删除"},
-			{"F2", "重命名"},
-			{"N", "新建目录"},
-			{"F5", "复制"},
-			{"F6", "移动"},
-			{"E", "编辑"},
-			{"S", "设置"},
-			{"Q", "退出"},
+			{"del", "删除"},
+			{"f2", "重命名"},
+			{"n", "新建目录"},
+			{"f5", "复制"},
+			{"f6", "移动"},
+			{"e", "编辑"},
+			{"s", "设置"},
+			{"q", "退出"},
 		})
 	}
 
