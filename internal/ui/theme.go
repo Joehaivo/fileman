@@ -2,35 +2,35 @@ package ui
 
 import "github.com/charmbracelet/lipgloss"
 
-// 颜色常量
+// 颜色常量 - OpenCode 风格艳丽深色主题
 const (
-	ColorBackground    = lipgloss.Color("#1a1b26") // 深色背景
-	ColorForeground    = lipgloss.Color("#c0caf5") // 主前景色
-	ColorBorderFocus   = lipgloss.Color("#7aa2f7") // 焦点边框色（蓝色）
-	ColorBorderNormal  = lipgloss.Color("#3b4261") // 普通边框色（暗灰）
-	ColorHeaderBg      = lipgloss.Color("#16161e") // Header 背景色
-	ColorFooterBg      = lipgloss.Color("#16161e") // Footer 背景色
-	ColorSelected      = lipgloss.Color("#ff9e64") // 多选高亮色（橙色）
-	ColorCursor        = lipgloss.Color("#2d3f76") // 光标背景色
-	ColorCursorFg      = lipgloss.Color("#c0caf5") // 光标前景色
-	ColorDirColor      = lipgloss.Color("#7aa2f7") // 目录颜色（蓝色）
-	ColorSymlinkColor  = lipgloss.Color("#bb9af7") // 符号链接颜色（紫色）
-	ColorExecColor     = lipgloss.Color("#9ece6a") // 可执行文件颜色（绿色）
-	ColorArchiveColor  = lipgloss.Color("#e0af68") // 归档文件颜色（黄色）
-	ColorImageColor    = lipgloss.Color("#ff9e64") // 图片颜色（橙色）
-	ColorSubdued       = lipgloss.Color("#565f89") // 暗淡文字色
-	ColorTitle         = lipgloss.Color("#7dcfff") // 标题色（浅蓝）
-	ColorSearchActive  = lipgloss.Color("#f7768e") // 搜索激活色（红色）
-	ColorSizeColor     = lipgloss.Color("#565f89") // 文件大小颜色
-	ColorDateColor     = lipgloss.Color("#565f89") // 日期颜色
-	ColorPreviewTitle  = lipgloss.Color("#7dcfff") // 预览标题颜色
-	ColorInfoLabel     = lipgloss.Color("#565f89") // 信息标签颜色
-	ColorInfoValue     = lipgloss.Color("#a9b1d6") // 信息值颜色
-	ColorSelectionInfo = lipgloss.Color("#ff9e64") // 选择信息颜色（橙色）
-	ColorKeyHint       = lipgloss.Color("#565f89") // 快捷键提示颜色
-	ColorKeyHighlight  = lipgloss.Color("#7aa2f7") // 快捷键高亮颜色
-	ColorError         = lipgloss.Color("#f7768e") // 错误颜色
-	ColorSuccess       = lipgloss.Color("#9ece6a") // 成功颜色
+	ColorBackground    = lipgloss.Color("#0d1117") // 深色背景（接近黑色）
+	ColorForeground    = lipgloss.Color("#e6edf3") // 主前景色（浅灰白）
+	ColorBorderFocus   = lipgloss.Color("#c586c0") // 焦点边框色（艳丽紫色）
+	ColorBorderNormal  = lipgloss.Color("#30363d") // 普通边框色（深灰）
+	ColorHeaderBg      = lipgloss.Color("#161b22") // Header 背景色
+	ColorFooterBg      = lipgloss.Color("#161b22") // Footer 背景色
+	ColorSelected      = lipgloss.Color("#ff79c6") // 多选高亮色（艳丽粉色）
+	ColorCursor        = lipgloss.Color("#6e40c9") // 光标背景色（深紫色）
+	ColorCursorFg      = lipgloss.Color("#ffffff") // 光标前景色（纯白）
+	ColorDirColor      = lipgloss.Color("#c586c0") // 目录颜色（紫色）
+	ColorSymlinkColor  = lipgloss.Color("#d2a8ff") // 符号链接颜色（浅紫色）
+	ColorExecColor     = lipgloss.Color("#7ee787") // 可执行文件颜色（亮绿色）
+	ColorArchiveColor  = lipgloss.Color("#f0883e") // 归档文件颜色（橙色）
+	ColorImageColor    = lipgloss.Color("#ff79c6") // 图片颜色（粉色）
+	ColorSubdued       = lipgloss.Color("#8b949e") // 暗淡文字色（中灰）
+	ColorTitle         = lipgloss.Color("#c586c0") // 标题色（紫色）
+	ColorSearchActive  = lipgloss.Color("#ff79c6") // 搜索激活色（粉色）
+	ColorSizeColor     = lipgloss.Color("#8b949e") // 文件大小颜色
+	ColorDateColor     = lipgloss.Color("#8b949e") // 日期颜色
+	ColorPreviewTitle  = lipgloss.Color("#c586c0") // 预览标题颜色（紫色）
+	ColorInfoLabel     = lipgloss.Color("#8b949e") // 信息标签颜色
+	ColorInfoValue     = lipgloss.Color("#e6edf3") // 信息值颜色（浅色）
+	ColorSelectionInfo = lipgloss.Color("#ff79c6") // 选择信息颜色（粉色）
+	ColorKeyHint       = lipgloss.Color("#8b949e") // 快捷键提示颜色
+	ColorKeyHighlight  = lipgloss.Color("#c586c0") // 快捷键高亮颜色（紫色）
+	ColorError         = lipgloss.Color("#f85149") // 错误颜色（红色）
+	ColorSuccess       = lipgloss.Color("#7ee787") // 成功颜色（绿色）
 )
 
 // Theme 主题样式集合
@@ -62,20 +62,20 @@ type Theme struct {
 	PreviewTitle    lipgloss.Style
 }
 
-// DefaultTheme 默认深色主题
+// DefaultTheme OpenCode 风格艳丽深色主题
 var DefaultTheme = &Theme{
-	BorderFocus:  lipgloss.NewStyle().Foreground(ColorBorderFocus),
+	BorderFocus:  lipgloss.NewStyle().Foreground(ColorBorderFocus).Bold(true),
 	BorderNormal: lipgloss.NewStyle().Foreground(ColorBorderNormal),
 
 	TitleStyle:     lipgloss.NewStyle().Foreground(ColorTitle).Bold(true),
 	SubduedStyle:   lipgloss.NewStyle().Foreground(ColorSubdued),
 	DirStyle:       lipgloss.NewStyle().Foreground(ColorDirColor).Bold(true),
 	SymlinkStyle:   lipgloss.NewStyle().Foreground(ColorSymlinkColor),
-	ExecStyle:      lipgloss.NewStyle().Foreground(ColorExecColor),
+	ExecStyle:      lipgloss.NewStyle().Foreground(ColorExecColor).Bold(true),
 	ArchiveStyle:   lipgloss.NewStyle().Foreground(ColorArchiveColor),
-	ImageStyle:     lipgloss.NewStyle().Foreground(ColorImageColor),
+	ImageStyle:     lipgloss.NewStyle().Foreground(ColorImageColor).Bold(true),
 	SelectedStyle:  lipgloss.NewStyle().Foreground(ColorSelected).Bold(true),
-	CursorStyle:    lipgloss.NewStyle().Background(ColorCursor).Foreground(ColorCursorFg),
+	CursorStyle:    lipgloss.NewStyle().Background(ColorCursor).Foreground(ColorCursorFg).Bold(true),
 	SizeStyle:      lipgloss.NewStyle().Foreground(ColorSizeColor),
 	DateStyle:      lipgloss.NewStyle().Foreground(ColorDateColor),
 	InfoLabelStyle: lipgloss.NewStyle().Foreground(ColorInfoLabel),
@@ -84,7 +84,7 @@ var DefaultTheme = &Theme{
 	KeyHintStyle:   lipgloss.NewStyle().Foreground(ColorKeyHint),
 	KeyHighlight:   lipgloss.NewStyle().Foreground(ColorKeyHighlight).Bold(true),
 	ErrorStyle:     lipgloss.NewStyle().Foreground(ColorError).Bold(true),
-	SuccessStyle:   lipgloss.NewStyle().Foreground(ColorSuccess),
+	SuccessStyle:   lipgloss.NewStyle().Foreground(ColorSuccess).Bold(true),
 	SelectionStyle: lipgloss.NewStyle().Foreground(ColorSelectionInfo).Bold(true),
 	PreviewTitle:   lipgloss.NewStyle().Foreground(ColorPreviewTitle).Bold(true),
 }

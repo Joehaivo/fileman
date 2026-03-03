@@ -173,23 +173,23 @@ func (m *Modal) Render() string {
 	hints := m.renderHints(boxWidth - 4)
 	content.WriteString(hints)
 
-	// 弹窗边框样式
+	// 弹窗边框样式 - 使用艳丽配色
 	var borderColor lipgloss.Color
 	switch m.Type {
 	case types.ModalDelete:
-		borderColor = ColorError
+		borderColor = ColorError // 红色
 	case types.ModalError:
-		borderColor = ColorError
+		borderColor = ColorError // 红色
 	case types.ModalProgress:
-		borderColor = ColorSuccess
+		borderColor = ColorSelected // 粉色，更醒目
 	default:
-		borderColor = ColorBorderFocus
+		borderColor = ColorBorderFocus // 紫色，强调色
 	}
 
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(borderColor).
-		Padding(1, 2).
+		Padding(2, 3). // 增加 padding，让内容与边框有更多间距
 		Width(boxWidth)
 
 	box := boxStyle.Render(content.String())

@@ -184,28 +184,35 @@ func (m *Model) calcSizes() {
 		return
 	}
 
-	// 可用内容高度 = 终端高度 - 外框上下边框(2) - 内部水平分隔线
-	// 布局：上框(1) + header(1) + 水平分隔(1) + content + 水平分隔(1) + footer(2) + 下框(1) = 7行固定
-	m.contentHeight = m.height - 7
+	// 可用内容高度 = 终端高度 - 外框上下边框(2) - 上下padding(2) - 内部水平分隔线
+	// 布局：上框(1) + 上padding(1) + header(1) + 水平分隔(1) + content + 水平分隔(1) + footer(2) + 下padding(1) + 下框(1) = 9行固定
+	m.contentHeight = m.height - 9
 	if m.contentHeight < 1 {
 		m.contentHeight = 1
 	}
 	contentHeight := m.contentHeight
 
+	// 计算可用内容宽度（去掉边框和padding）
+	// 外框总宽度 = m.width，边框左右各1列，padding左右各1列
+	contentWidth := m.width - 4 // -2 for 左右边框，-2 for 左右padding
+
 	// 左栏宽度（40%），右栏宽度（60%）
-	// 布局：左框(1) + leftWidth + 垂直分隔(1) + rightWidth + 右框(1) = width
-	leftWidth := m.width * leftRatio / leftDenom
-	rightWidth := m.width - leftWidth - 3 // -3: 左框+分隔+右框
+	// 布局：leftWidth + 垂直分隔(1) + rightWidth = contentWidth
+	leftWidth := contentWidth * leftRatio / leftDenom
+	rightWidth := contentWidth - leftWidth - 1 // -1 for 垂直分隔符
 	if rightWidth < 10 {
 		rightWidth = 10
+	}
+	if leftWidth < 10 {
+		leftWidth = 10
 	}
 
 	// 面板高度：contentHeight / 2，考虑中间水平分隔线
 	panelHeight := (contentHeight - 1) / 2 // -1 for 中间水平分隔线
 
 	// 设置各组件尺寸
-	m.header.SetSize(m.width - 2) // -2 for 左右边框
-	m.footer.SetSize(m.width - 2)
+	m.header.SetSize(contentWidth) // 使用内容宽度（已扣除边框和padding）
+	m.footer.SetSize(contentWidth)
 	m.panelA.SetSize(leftWidth, panelHeight)
 	m.panelB.SetSize(leftWidth, panelHeight)
 	m.preview.SetSize(rightWidth, contentHeight)

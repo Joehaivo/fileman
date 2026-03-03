@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/haivo/fileman/internal/types"
 	"github.com/haivo/fileman/internal/ui"
 )
 
@@ -34,9 +35,13 @@ func (m Model) View() string {
 func (m Model) renderFrame() string {
 	border := lipgloss.RoundedBorder()
 	borderColor := ui.ColorBorderNormal
+	if m.focus == types.FocusPanelA || m.focus == types.FocusPanelB {
+		borderColor = ui.ColorBorderFocus
+	}
 
-	// 计算内部宽度（去掉左右边框各1列）
-	innerWidth := m.width - 2
+	// 计算内部宽度（去掉左右边框各1列和左右padding各1列）
+	// Padding 在 Border 内部，所以内容宽度 = width - border(2) - padding(2)
+	innerWidth := m.width - 4 // -2 for 左右边框，-2 for 左右padding
 
 	// --- Header 行 ---
 	headerContent := m.header.RenderWithSize(m.selectionTotalSize)
@@ -62,11 +67,12 @@ func (m Model) renderFrame() string {
 	sb.WriteByte('\n')
 	sb.WriteString(footerContent)
 
-	// 包裹外框边框
+	// 包裹外框边框，增加 padding 使内容与边框有间距
 	outerStyle := lipgloss.NewStyle().
 		Border(border).
 		BorderForeground(borderColor).
-		Width(innerWidth)
+		Padding(1, 1). // 上下左右各1个字符的间距，让内容与边框有呼吸感
+		Width(m.width) // 总宽度包含边框
 
 	return outerStyle.Render(sb.String())
 }
@@ -79,9 +85,9 @@ func (m Model) renderContent() string {
 	// 右栏：预览区
 	rightContent := m.renderRightColumn()
 
-	// 计算左右栏宽度（含边框）
-	leftWidth := m.panelA.Width + 2 // +2 for 左右边框
-	rightWidth := m.preview.Width + 2
+	// 计算左右栏宽度（不含边框，因为已经在内容区域内）
+	leftWidth := m.panelA.Width
+	rightWidth := m.preview.Width
 
 	// 垂直拼接左右两栏
 	leftLines := strings.Split(leftContent, "\n")
