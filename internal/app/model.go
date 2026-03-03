@@ -42,6 +42,9 @@ type Model struct {
 	width  int
 	height int
 
+	// 内容区域高度（用于固定布局）
+	contentHeight int
+
 	// 子组件
 	header   *ui.Header
 	footer   *ui.Footer
@@ -183,10 +186,11 @@ func (m *Model) calcSizes() {
 
 	// 可用内容高度 = 终端高度 - 外框上下边框(2) - 内部水平分隔线
 	// 布局：上框(1) + header(1) + 水平分隔(1) + content + 水平分隔(1) + footer(2) + 下框(1) = 7行固定
-	contentHeight := m.height - 7
-	if contentHeight < 1 {
-		contentHeight = 1
+	m.contentHeight = m.height - 7
+	if m.contentHeight < 1 {
+		m.contentHeight = 1
 	}
+	contentHeight := m.contentHeight
 
 	// 左栏宽度（40%），右栏宽度（60%）
 	// 布局：左框(1) + leftWidth + 垂直分隔(1) + rightWidth + 右框(1) = width

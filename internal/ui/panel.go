@@ -199,6 +199,7 @@ func (p *Panel) clampScrollOffset() {
 }
 
 // Render 渲染面板内容（不含边框）
+// 始终返回固定 p.Height 行，确保布局稳定
 func (p *Panel) Render() string {
 	if p.Width < panelMinWidth || p.Height <= 0 {
 		return ""
@@ -207,7 +208,7 @@ func (p *Panel) Render() string {
 	entries := p.visibleEntries()
 	var sb strings.Builder
 
-	// 渲染路径标题行（缩短路径）
+	// 渲染路径标题行（缩短路径）- 固定第1行
 	pathLine := p.renderPathLine()
 	sb.WriteString(pathLine)
 	sb.WriteByte('\n')
@@ -215,25 +216,40 @@ func (p *Panel) Render() string {
 	// 内容可视行数（减去路径标题行）
 	visibleHeight := p.Height - 1
 	if visibleHeight <= 0 {
+		// 如果高度只有1行，只返回路径标题行
 		return sb.String()
 	}
 
 	// 重新计算滚动范围（基于减去标题后的高度）
 	total := len(entries) + 1 // +1 for ".."
-	end := p.Offset + visibleHeight
+	start := p.Offset
+	end := start + visibleHeight
 	if end > total {
 		end = total
 	}
 
-	for i := p.Offset; i < end; i++ {
+	// 渲染文件列表行
+	renderedLines := 0
+	for i := start; i < end; i++ {
 		line := p.renderLine(i, entries)
 		sb.WriteString(line)
-		if i < end-1 {
-			sb.WriteByte('\n')
-		}
+		sb.WriteByte('\n')
+		renderedLines++
 	}
 
-	return sb.String()
+	// 填充剩余空行，确保总行数 = p.Height（路径标题1行 + visibleHeight行）
+	for renderedLines < visibleHeight {
+		sb.WriteString(strings.Repeat(" ", p.Width))
+		sb.WriteByte('\n')
+		renderedLines++
+	}
+
+	// 移除最后一个换行符（因为整个字符串末尾不应该有换行）
+	result := sb.String()
+	if len(result) > 0 && result[len(result)-1] == '\n' {
+		result = result[:len(result)-1]
+	}
+	return result
 }
 
 // renderPathLine 渲染路径标题行

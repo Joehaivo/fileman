@@ -72,6 +72,7 @@ func (m Model) renderFrame() string {
 }
 
 // renderContent 渲染内容区域（左栏双面板 + 右栏预览）
+// 强制返回固定 m.contentHeight 行，确保 Header 和 Footer 位置不变
 func (m Model) renderContent() string {
 	// 左栏：PanelA（上）+ 分隔线 + PanelB（下）
 	leftContent := m.renderLeftColumn()
@@ -86,33 +87,47 @@ func (m Model) renderContent() string {
 	leftLines := strings.Split(leftContent, "\n")
 	rightLines := strings.Split(rightContent, "\n")
 
-	// 确保两侧行数一致（取最多的，填充空行）
-	maxLines := len(leftLines)
-	if len(rightLines) > maxLines {
-		maxLines = len(rightLines)
+	// 移除末尾空行（split 会在末尾产生空行）
+	if len(leftLines) > 0 && leftLines[len(leftLines)-1] == "" {
+		leftLines = leftLines[:len(leftLines)-1]
+	}
+	if len(rightLines) > 0 && rightLines[len(rightLines)-1] == "" {
+		rightLines = rightLines[:len(rightLines)-1]
 	}
 
-	for len(leftLines) < maxLines {
+	// 强制使用固定的 contentHeight，确保布局稳定
+	fixedHeight := m.contentHeight
+	if fixedHeight <= 0 {
+		fixedHeight = 1
+	}
+
+	// 确保两侧行数 = fixedHeight
+	for len(leftLines) < fixedHeight {
 		leftLines = append(leftLines, strings.Repeat(" ", leftWidth))
 	}
-	for len(rightLines) < maxLines {
+	for len(rightLines) < fixedHeight {
 		rightLines = append(rightLines, strings.Repeat(" ", rightWidth))
+	}
+	// 如果超出，截断
+	if len(leftLines) > fixedHeight {
+		leftLines = leftLines[:fixedHeight]
+	}
+	if len(rightLines) > fixedHeight {
+		rightLines = rightLines[:fixedHeight]
 	}
 
 	var sb strings.Builder
 	borderColor := ui.ColorBorderNormal
 
-	for i, leftLine := range leftLines {
-		rightLine := ""
-		if i < len(rightLines) {
-			rightLine = rightLines[i]
-		}
+	for i := 0; i < fixedHeight; i++ {
+		leftLine := leftLines[i]
+		rightLine := rightLines[i]
 		// 中间垂直分隔符
 		sep := lipgloss.NewStyle().Foreground(borderColor).Render("│")
 		sb.WriteString(leftLine)
 		sb.WriteString(sep)
 		sb.WriteString(rightLine)
-		if i < len(leftLines)-1 {
+		if i < fixedHeight-1 {
 			sb.WriteByte('\n')
 		}
 	}
