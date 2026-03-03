@@ -342,8 +342,12 @@ func (m Model) enterSearchMode() (tea.Model, tea.Cmd) {
 // handleGoUp 处理左方向键（返回上一级目录）
 func (m Model) handleGoUp() (tea.Model, tea.Cmd) {
 	panel := m.activePanel()
+	currentDirName := filepath.Base(panel.Path)
 	parentPath := filepath.Dir(panel.Path)
+
 	if parentPath != panel.Path {
+		// 设置待选中的文件名，以便加载后自动选中之前的目录
+		panel.PendingSelect = currentDirName
 		return m, m.navigateTo(parentPath)
 	}
 	return m, nil

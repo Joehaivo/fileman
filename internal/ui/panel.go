@@ -23,19 +23,20 @@ const (
 
 // Panel 文件面板组件，管理单个目录的文件列表显示
 type Panel struct {
-	Path        string             // 当前目录路径
-	Entries     []types.FileEntry  // 文件条目列表（不含 ".."）
-	Filtered    []types.FileEntry  // 过滤后的文件条目列表
-	Cursor      int                // 当前光标位置（0 = ".."）
-	Offset      int                // 列表滚动偏移量
-	Width       int                // 面板宽度（不含边框）
-	Height      int                // 面板高度（不含边框）
-	IsFocused   bool               // 是否为焦点面板
-	Selection   types.SelectionSet // 选择集（共享）
-	SearchQuery string             // 当前搜索关键词
-	IsSearching bool               // 是否处于搜索模式
-	Error       string             // 错误信息
-	ShowDate    bool               // 是否显示日期
+	Path          string             // 当前目录路径
+	Entries       []types.FileEntry  // 文件条目列表（不含 ".."）
+	Filtered      []types.FileEntry  // 过滤后的文件条目列表
+	Cursor        int                // 当前光标位置（0 = ".."）
+	Offset        int                // 列表滚动偏移量
+	Width         int                // 面板宽度（不含边框）
+	Height        int                // 面板高度（不含边框）
+	IsFocused     bool               // 是否为焦点面板
+	Selection     types.SelectionSet // 选择集（共享）
+	SearchQuery   string             // 当前搜索关键词
+	IsSearching   bool               // 是否处于搜索模式
+	Error         string             // 错误信息
+	ShowDate      bool               // 是否显示日期
+	PendingSelect string             // 待选中的文件名（加载后自动选中）
 }
 
 // NewPanel 创建新的文件面板
@@ -160,6 +161,29 @@ func (p *Panel) SetSearch(query string) {
 	p.filterEntries()
 	p.Cursor = 0
 	p.Offset = 0
+}
+
+// SetCursorByName 根据文件名设置光标位置
+func (p *Panel) SetCursorByName(name string) {
+	if name == "" {
+		return
+	}
+
+	// 查找匹配的文件名
+	targetIdx := -1
+	entries := p.visibleEntries()
+	for i, e := range entries {
+		if e.Name == name {
+			targetIdx = i
+			break
+		}
+	}
+
+	if targetIdx != -1 {
+		// Cursor 是基于 visibleEntries 的索引 + 1 (因为 0 是 "..")
+		p.Cursor = targetIdx + 1
+		p.clampScrollOffset()
+	}
 }
 
 // filterEntries 根据搜索关键词过滤文件列表（模糊匹配）
@@ -324,7 +348,7 @@ func (p *Panel) renderParentDirLine(isCursor bool) string {
 	// 总宽度 = p.Width
 	// Padding = 2 (left 1, right 1)
 	contentWidth := p.Width - 2
-	
+
 	if contentWidth < 1 {
 		contentWidth = 1
 	}
@@ -343,12 +367,12 @@ func (p *Panel) renderParentDirLine(isCursor bool) string {
 		// CursorStyle 已经包含了 Padding(0, 1)
 		return style.Width(p.Width).Render(text)
 	}
-	
+
 	style := DefaultTheme.DirStyle
 	if !p.IsFocused {
 		style = style.Copy().Foreground(ColorSubdued)
 	}
-	
+
 	// 非光标行也需要 Padding(0, 1) 来对齐，但没有背景色
 	return lipgloss.NewStyle().Padding(0, 1).Width(p.Width).Render(style.Render(text))
 }
@@ -372,7 +396,7 @@ func (p *Panel) renderEntryLine(entry types.FileEntry, isCursor bool) string {
 	if p.ShowDate {
 		fixedWidth += 1 + dateWidth // + 1 + 11 = 12 -> Total 21
 	}
-	
+
 	nameWidth := contentWidth - fixedWidth
 	if nameWidth < 1 {
 		nameWidth = 1

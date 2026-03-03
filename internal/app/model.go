@@ -179,6 +179,12 @@ func applyPanelLoad(p *ui.Panel, msg panelLoadMsg) {
 	if p.IsSearching {
 		p.SetSearch(p.SearchQuery)
 	}
+
+	// 检查是否有待选中的文件
+	if p.PendingSelect != "" {
+		p.SetCursorByName(p.PendingSelect)
+		p.PendingSelect = ""
+	}
 }
 
 // updatePreview 根据当前焦点面板更新预览
