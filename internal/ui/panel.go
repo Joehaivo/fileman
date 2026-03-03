@@ -320,10 +320,37 @@ func (p *Panel) renderParentDirLine(isCursor bool) string {
 	icon := " "
 	text := fmt.Sprintf("%s ..", icon)
 
-	if isCursor {
-		return DefaultTheme.CursorStyle.Width(p.Width).Render(text)
+	// 计算内容宽度（所有行都应该有左右 padding，以保证对齐）
+	// 总宽度 = p.Width
+	// Padding = 2 (left 1, right 1)
+	contentWidth := p.Width - 2
+	
+	if contentWidth < 1 {
+		contentWidth = 1
 	}
-	return DefaultTheme.DirStyle.Width(p.Width).Render(text)
+
+	// 补全空格使 text 填满 contentWidth
+	currentWidth := lipgloss.Width(text)
+	if currentWidth < contentWidth {
+		text += strings.Repeat(" ", contentWidth-currentWidth)
+	}
+
+	if isCursor {
+		style := DefaultTheme.CursorStyle
+		if !p.IsFocused {
+			style = style.Copy().Background(ColorBorderNormal).Foreground(ColorSubdued)
+		}
+		// CursorStyle 已经包含了 Padding(0, 1)
+		return style.Width(p.Width).Render(text)
+	}
+	
+	style := DefaultTheme.DirStyle
+	if !p.IsFocused {
+		style = style.Copy().Foreground(ColorSubdued)
+	}
+	
+	// 非光标行也需要 Padding(0, 1) 来对齐，但没有背景色
+	return lipgloss.NewStyle().Padding(0, 1).Width(p.Width).Render(style.Render(text))
 }
 
 // renderEntryLine 渲染文件条目行
@@ -386,20 +413,38 @@ func (p *Panel) renderEntryLine(entry types.FileEntry, isCursor bool) string {
 		nameStyle = p.getFileStyle(entry)
 	}
 
+	// 如果面板未激活，使样式变淡
+	if !p.IsFocused {
+		nameStyle = nameStyle.Copy().Foreground(ColorSubdued)
+	}
+
 	iconPart := lipgloss.NewStyle().Width(iconWidth).Render(icon)
 	namePart := nameStyle.Width(nameWidth).Render(name)
-	sizePart := DefaultTheme.SizeStyle.Width(sizeWidth).Align(lipgloss.Right).Render(sizeStr)
+	sizeStyle := DefaultTheme.SizeStyle
+	dateStyle := DefaultTheme.DateStyle
+	if !p.IsFocused {
+		sizeStyle = sizeStyle.Copy().Foreground(ColorSubdued)
+		dateStyle = dateStyle.Copy().Foreground(ColorSubdued)
+	}
+
+	sizePart := sizeStyle.Width(sizeWidth).Align(lipgloss.Right).Render(sizeStr)
 
 	var line string
 	if p.ShowDate {
-		datePart := DefaultTheme.DateStyle.Width(dateWidth).Align(lipgloss.Right).Render(dateStr)
+		datePart := dateStyle.Width(dateWidth).Align(lipgloss.Right).Render(dateStr)
 		line = fmt.Sprintf("%s%s %s %s", iconPart, namePart, sizePart, datePart)
 	} else {
 		line = fmt.Sprintf("%s%s %s", iconPart, namePart, sizePart)
 	}
 
 	if isCursor {
-		return DefaultTheme.CursorStyle.Width(p.Width).Render(line)
+		style := DefaultTheme.CursorStyle
+		if !p.IsFocused {
+			// 未激活面板的光标颜色变淡
+			style = style.Copy().Background(ColorBorderNormal).Foreground(ColorSubdued)
+		}
+		// CursorStyle 包含 Padding(0, 1)
+		return style.Width(p.Width).Render(line)
 	}
 
 	return lipgloss.NewStyle().Width(p.Width).Render(line)
