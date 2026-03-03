@@ -18,6 +18,8 @@ type Modal struct {
 	ScreenWidth int             // 屏幕宽度（用于居中）
 	ScreenHeight int            // 屏幕高度（用于居中）
 	Progress    *types.ProgressInfo // 进度信息（进度型）
+	Settings    *types.Settings     // 设置信息（设置型，临时状态）
+	SettingsIdx int                 // 设置项当前索引
 }
 
 // NewModal 创建新的模态弹窗
@@ -169,6 +171,13 @@ func (m *Modal) Render() string {
 		content.WriteByte('\n')
 	}
 
+	// 设置列表
+	if m.Type == types.ModalSettings {
+		content.WriteString(m.renderSettingsList(boxWidth - 4))
+		content.WriteByte('\n')
+		content.WriteByte('\n')
+	}
+
 	// 操作提示
 	hints := m.renderHints(boxWidth - 4)
 	content.WriteString(hints)
@@ -182,6 +191,8 @@ func (m *Modal) Render() string {
 		borderColor = ColorError // 红色
 	case types.ModalProgress:
 		borderColor = ColorSelected // 粉色，更醒目
+	case types.ModalSettings:
+		borderColor = ColorBorderFocus // 设置也是强调色
 	default:
 		borderColor = ColorBorderFocus // 紫色，强调色
 	}
@@ -249,6 +260,15 @@ func (m *Modal) renderHints(width int) string {
 		} else {
 			hints = DefaultTheme.SubduedStyle.Render("操作进行中...")
 		}
+	case types.ModalSettings:
+		hints = DefaultTheme.KeyHighlight.Render("Enter") +
+			DefaultTheme.KeyHintStyle.Render(" 确认  ") +
+			DefaultTheme.KeyHighlight.Render("Esc") +
+			DefaultTheme.KeyHintStyle.Render(" 取消  ") +
+			DefaultTheme.KeyHighlight.Render("Space") +
+			DefaultTheme.KeyHintStyle.Render(" 切换  ") +
+			DefaultTheme.KeyHighlight.Render("↑↓") +
+			DefaultTheme.KeyHintStyle.Render(" 选择")
 	default:
 		hints = DefaultTheme.KeyHighlight.Render("Enter") +
 			DefaultTheme.KeyHintStyle.Render(" 确认  ") +
@@ -257,6 +277,51 @@ func (m *Modal) renderHints(width int) string {
 	}
 
 	return lipgloss.NewStyle().Width(width).Render(hints)
+}
+
+// ShowSettings 显示设置弹窗
+func (m *Modal) ShowSettings(currentSettings types.Settings) {
+	m.Type = types.ModalSettings
+	m.Title = "设置"
+	m.HasInput = false
+	// 复制设置到临时状态
+	s := currentSettings
+	m.Settings = &s
+	m.SettingsIdx = 0
+}
+
+// renderSettingsList 渲染设置列表
+func (m *Modal) renderSettingsList(width int) string {
+	if m.Settings == nil {
+		return ""
+	}
+
+	var sb strings.Builder
+
+	// 设置项1：展示修改时间
+	label := "展示修改时间"
+	status := "[ ] "
+	if m.Settings.ShowDate {
+		status = "[x] "
+	}
+	
+	style := lipgloss.NewStyle().Foreground(ColorForeground)
+	cursor := "  "
+	
+	// 当前仅有 1 个设置项，所以 idx 0 总是选中
+	if m.SettingsIdx == 0 {
+		style = lipgloss.NewStyle().Foreground(ColorSelected).Bold(true)
+		cursor = "> "
+	}
+	
+	line := style.Render(cursor + status + label)
+	sb.WriteString(line)
+	// sb.WriteByte('\n') // 只有一项时不需要换行，Render 中已经添加了额外的空行
+
+	// 后续添加更多设置项时：
+	// if m.SettingsIdx == 1 { ... }
+	
+	return sb.String()
 }
 
 // itoa 简单整数转字符串

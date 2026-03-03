@@ -35,6 +35,7 @@ type Panel struct {
 	SearchQuery string             // 当前搜索关键词
 	IsSearching bool               // 是否处于搜索模式
 	Error       string             // 错误信息
+	ShowDate    bool               // 是否显示日期
 }
 
 // NewPanel 创建新的文件面板
@@ -43,6 +44,7 @@ func NewPanel(path string, selection types.SelectionSet) *Panel {
 		Path:      path,
 		Selection: selection,
 		Cursor:    0,
+		ShowDate:  false, // 默认不显示日期
 	}
 }
 
@@ -99,7 +101,11 @@ func (p *Panel) MoveCursorDown() {
 
 // MoveCursorPageUp 光标上翻页
 func (p *Panel) MoveCursorPageUp() {
-	p.Cursor -= p.Height
+	visibleHeight := p.Height - 1
+	if visibleHeight < 1 {
+		visibleHeight = 1
+	}
+	p.Cursor -= visibleHeight
 	if p.Cursor < 0 {
 		p.Cursor = 0
 	}
@@ -108,7 +114,11 @@ func (p *Panel) MoveCursorPageUp() {
 
 // MoveCursorPageDown 光标下翻页
 func (p *Panel) MoveCursorPageDown() {
-	p.Cursor += p.Height
+	visibleHeight := p.Height - 1
+	if visibleHeight < 1 {
+		visibleHeight = 1
+	}
+	p.Cursor += visibleHeight
 	total := p.TotalItems()
 	if p.Cursor >= total {
 		p.Cursor = total - 1
@@ -180,13 +190,25 @@ func (p *Panel) clampScrollOffset() {
 	}
 
 	// 光标在可视区域之后：向下滚动
-	if p.Cursor >= p.Offset+p.Height {
-		p.Offset = p.Cursor - p.Height + 1
+	// 注意：p.Height 包含了路径标题行，所以实际文件列表高度是 p.Height - 1
+	// 当光标位于 (p.Offset + p.Height - 1) 时，已经是可视区域的最后一行
+	// 所以当 Cursor >= Offset + (p.Height - 1) 时，需要向下滚动
+	visibleHeight := p.Height - 1
+	if visibleHeight < 1 {
+		visibleHeight = 1
+	}
+
+	if p.Cursor >= p.Offset+visibleHeight {
+		// p.Cursor 是 0-based index
+		// 如果 p.Cursor = 10, visibleHeight = 5
+		// Offset 应该是 10 - 5 + 1 = 6
+		// 显示范围: 6, 7, 8, 9, 10 (共5行)
+		p.Offset = p.Cursor - visibleHeight + 1
 	}
 
 	// 边界检查
 	total := p.TotalItems()
-	maxOffset := total - p.Height
+	maxOffset := total - visibleHeight
 	if maxOffset < 0 {
 		maxOffset = 0
 	}
@@ -309,8 +331,22 @@ func (p *Panel) renderEntryLine(entry types.FileEntry, isCursor bool) string {
 	icon := fileops.GetFileIcon(entry.Name, entry.IsDir)
 	isSelected := p.Selection.Has(entry.Path)
 
-	// 可用于文件名的宽度 = 总宽 - 图标(2) - 大小(6) - 日期(11) - 空格(3)
-	nameWidth := p.Width - iconWidth - sizeWidth - dateWidth - 3
+	// 布局计算：
+	// 总可用宽度（扣除左右 padding 各 1）
+	contentWidth := p.Width - 2
+	if contentWidth < 1 {
+		contentWidth = 1
+	}
+
+	// 计算固定部分宽度：
+	// Icon(2) + Name(Flex) + Space(1) + Size(6) [+ Space(1) + Date(11)]
+	// 注意：Icon 和 Name 之间在 Sprintf 中无空格
+	fixedWidth := iconWidth + 1 + sizeWidth // 2 + 1 + 6 = 9
+	if p.ShowDate {
+		fixedWidth += 1 + dateWidth // + 1 + 11 = 12 -> Total 21
+	}
+	
+	nameWidth := contentWidth - fixedWidth
 	if nameWidth < 1 {
 		nameWidth = 1
 	}
@@ -331,7 +367,10 @@ func (p *Panel) renderEntryLine(entry types.FileEntry, isCursor bool) string {
 	}
 
 	// 格式化日期
-	dateStr := fileops.FormatDate(entry.ModTime)
+	dateStr := ""
+	if p.ShowDate {
+		dateStr = fileops.FormatDate(entry.ModTime)
+	}
 
 	// 选择样式
 	var nameStyle lipgloss.Style
@@ -350,9 +389,14 @@ func (p *Panel) renderEntryLine(entry types.FileEntry, isCursor bool) string {
 	iconPart := lipgloss.NewStyle().Width(iconWidth).Render(icon)
 	namePart := nameStyle.Width(nameWidth).Render(name)
 	sizePart := DefaultTheme.SizeStyle.Width(sizeWidth).Align(lipgloss.Right).Render(sizeStr)
-	datePart := DefaultTheme.DateStyle.Width(dateWidth).Align(lipgloss.Right).Render(dateStr)
 
-	line := fmt.Sprintf("%s%s %s %s", iconPart, namePart, sizePart, datePart)
+	var line string
+	if p.ShowDate {
+		datePart := DefaultTheme.DateStyle.Width(dateWidth).Align(lipgloss.Right).Render(dateStr)
+		line = fmt.Sprintf("%s%s %s %s", iconPart, namePart, sizePart, datePart)
+	} else {
+		line = fmt.Sprintf("%s%s %s", iconPart, namePart, sizePart)
+	}
 
 	if isCursor {
 		return DefaultTheme.CursorStyle.Width(p.Width).Render(line)

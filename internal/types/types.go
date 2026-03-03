@@ -82,7 +82,13 @@ const (
 	ModalDelete                    // 删除确认
 	ModalProgress                  // 复制/移动进度
 	ModalError                     // 错误提示
+	ModalSettings                  // 设置弹窗
 )
+
+// Settings 应用设置
+type Settings struct {
+	ShowDate bool // 是否显示修改时间
+}
 
 // ProgressInfo 复制/移动进度信息
 type ProgressInfo struct {

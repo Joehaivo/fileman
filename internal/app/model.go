@@ -66,6 +66,9 @@ type Model struct {
 	// 选中文件总大小（Header 显示用）
 	selectionTotalSize int64
 
+	// 应用设置
+	settings types.Settings
+
 	// 待处理的复制/移动目标路径
 	pendingOpSrc []string
 	pendingOpDst string
@@ -87,11 +90,16 @@ func New() (Model, tea.Cmd) {
 	}
 
 	selection := make(types.SelectionSet)
+	settings := types.Settings{
+		ShowDate: false,
+	}
 
 	header := ui.NewHeader(selection)
 	footer := ui.NewFooter()
 	panelA := ui.NewPanel(cwd, selection)
+	panelA.ShowDate = settings.ShowDate
 	panelB := ui.NewPanel(homeDir, selection)
+	panelB.ShowDate = settings.ShowDate
 	preview := ui.NewPreviewPane()
 	modal := ui.NewModal()
 
@@ -104,6 +112,7 @@ func New() (Model, tea.Cmd) {
 		modal:     modal,
 		focus:     types.FocusPanelA,
 		selection: selection,
+		settings:  settings,
 	}
 
 	// 初始加载两个面板的目录内容，保存为初始命令在 Init 中执行

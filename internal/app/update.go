@@ -97,6 +97,32 @@ func (m Model) handleModalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.modal.Input, cmd = m.modal.Input.Update(msg)
 		return m, cmd
 
+	case types.ModalSettings:
+		if isEnter(msg) {
+			// 保存并应用设置
+			if m.modal.Settings != nil {
+				m.settings = *m.modal.Settings
+				m.panelA.ShowDate = m.settings.ShowDate
+				m.panelB.ShowDate = m.settings.ShowDate
+			}
+			m.modal.Hide()
+			return m, nil
+		}
+		if isEscape(msg) {
+			m.modal.Hide()
+			return m, nil
+		}
+		
+		switch msg.String() {
+		case "up", "k", "down", "j":
+			// 目前只有一个设置项，不需要移动
+		case " ":
+			if m.modal.Settings != nil {
+				m.modal.Settings.ShowDate = !m.modal.Settings.ShowDate
+			}
+		}
+		return m, nil
+
 	case types.ModalError, types.ModalProgress:
 		if isEnter(msg) || isEscape(msg) {
 			if m.modal.Type == types.ModalProgress {
@@ -277,6 +303,11 @@ func (m Model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	if isEdit(msg) {
 		return m.openInEditor()
+	}
+
+	if msg.String() == "s" || msg.String() == "S" {
+		m.modal.ShowSettings(m.settings)
+		return m, nil
 	}
 
 	return m, nil
