@@ -47,8 +47,12 @@ func ReadPreview(entry types.FileEntry) *PreviewResult {
 	}
 	defer f.Close()
 
-	// 读取前 512 字节检测是否为二进制文件
-	header := make([]byte, 512)
+	// 读取前 8192 字节检测是否为文本文件（增加检测范围提高准确性）
+	headerSize := 8192
+	if entry.Size < int64(headerSize) {
+		headerSize = int(entry.Size)
+	}
+	header := make([]byte, headerSize)
 	n, err := f.Read(header)
 	if err != nil && err != io.EOF {
 		return &PreviewResult{Error: fmt.Sprintf("读取文件失败: %v", err)}
@@ -98,19 +102,73 @@ func ReadPreview(entry types.FileEntry) *PreviewResult {
 }
 
 // isBinary 检测字节序列是否为二进制内容
-// 通过检查是否存在 null 字节或大量非 UTF-8 字节来判断
+// 通过检查是否存在 null 字节、大量非 UTF-8 字节或控制字符来判断
 func isBinary(data []byte) bool {
 	if len(data) == 0 {
 		return false
 	}
 
-	// 存在 null 字节则认为是二进制
-	for _, b := range data {
+	// 允许的文本控制字符（ASCII 0-31中常见的文本字符）
+	allowedControlChars := map[byte]bool{
+		0x09: true, // Tab
+		0x0A: true, // LF (换行)
+		0x0D: true, // CR (回车)
+		0x1B: true, // ESC (ANSI转义序列)
+	}
+
+	nullCount := 0
+	invalidUTF8Count := 0
+	totalBytes := len(data)
+	
+	// 检查前1024字节（或全部，如果文件更小）
+	checkSize := totalBytes
+	if checkSize > 1024 {
+		checkSize = 1024
+	}
+
+	for i := 0; i < checkSize; i++ {
+		b := data[i]
+		
+		// null 字节通常是二进制文件的标志
 		if b == 0 {
+			nullCount++
+			// 如果null字节超过1%，很可能是二进制文件
+			if nullCount > checkSize/100 {
+				return true
+			}
+		}
+		
+		// 检查控制字符（0-31，除了允许的）
+		if b < 32 && !allowedControlChars[b] {
+			invalidUTF8Count++
+		}
+	}
+
+	// 如果无效控制字符超过5%，可能是二进制文件
+	if invalidUTF8Count > checkSize/20 {
+		return true
+	}
+
+	// 检查 UTF-8 有效性（检查前1024字节）
+	checkData := data
+	if len(checkData) > 1024 {
+		checkData = data[:1024]
+	}
+	
+	// 如果数据不是有效的UTF-8，尝试检查是否至少大部分是文本
+	if !utf8.Valid(checkData) {
+		// 统计可打印字符的比例
+		printableCount := 0
+		for _, b := range checkData {
+			if (b >= 32 && b < 127) || b == 0x09 || b == 0x0A || b == 0x0D {
+				printableCount++
+			}
+		}
+		// 如果可打印字符少于70%，可能是二进制文件
+		if printableCount < len(checkData)*70/100 {
 			return true
 		}
 	}
 
-	// 检查 UTF-8 有效性
-	return !utf8.Valid(data)
+	return false
 }

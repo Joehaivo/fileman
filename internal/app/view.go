@@ -68,11 +68,13 @@ func (m Model) renderFrame() string {
 	sb.WriteString(footerContent)
 
 	// 包裹外框边框，增加 padding 使内容与边框有间距
+	// lipgloss的Border占用2列，Padding占用2列，所以总宽度 = 内容宽度 + 4
+	// 我们指定总宽度为m.width，内容宽度会自动调整为m.width-4
 	outerStyle := lipgloss.NewStyle().
 		Border(border).
 		BorderForeground(borderColor).
 		Padding(1, 1). // 上下左右各1个字符的间距，让内容与边框有呼吸感
-		Width(m.width) // 总宽度包含边框
+		Width(m.width) // 指定总宽度，lipgloss会自动处理边框和padding
 
 	return outerStyle.Render(sb.String())
 }

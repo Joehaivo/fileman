@@ -230,6 +230,16 @@ func (m Model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleEnter()
 	}
 
+	if isLeft(msg) {
+		// 左方向键：返回上一级目录
+		return m.handleGoUp()
+	}
+
+	if isRight(msg) {
+		// 右方向键：进入选中的目录
+		return m.handleEnter()
+	}
+
 	if isSpace(msg) {
 		m.activePanel().ToggleSelection()
 		m.selectionTotalSize = m.computeSelectionSize()
@@ -298,17 +308,23 @@ func (m Model) enterSearchMode() (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// handleGoUp 处理左方向键（返回上一级目录）
+func (m Model) handleGoUp() (tea.Model, tea.Cmd) {
+	panel := m.activePanel()
+	parentPath := filepath.Dir(panel.Path)
+	if parentPath != panel.Path {
+		return m, m.navigateTo(parentPath)
+	}
+	return m, nil
+}
+
 // handleEnter 处理 Enter 键（打开目录/文件）
 func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	panel := m.activePanel()
 
 	if panel.Cursor == 0 {
 		// 返回上级目录
-		parentPath := filepath.Dir(panel.Path)
-		if parentPath != panel.Path {
-			return m, m.navigateTo(parentPath)
-		}
-		return m, nil
+		return m.handleGoUp()
 	}
 
 	entry := panel.CurrentEntry()

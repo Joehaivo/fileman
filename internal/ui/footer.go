@@ -41,20 +41,22 @@ func (f *Footer) Render() string {
 		})
 	} else {
 		line1 = f.renderKeys([]keyHint{
+			{"←", "上一级"},
+			{"→", "进入"},
 			{"Enter", "打开"},
 			{"Space", "多选"},
 			{"Tab", "切换窗口"},
 			{"/", "搜索"},
-			{"Ctrl+A", "全选"},
+			{"A", "全选"},
 		})
 		line2 = f.renderKeys([]keyHint{
 			{"Del", "删除"},
 			{"F2", "重命名"},
-			{"Ctrl+N", "新建目录"},
+			{"N", "新建目录"},
 			{"F5", "复制"},
 			{"F6", "移动"},
-			{"Ctrl+E", "编辑"},
-			{"Ctrl+Q", "退出"},
+			{"E", "编辑"},
+			{"Q", "退出"},
 		})
 	}
 

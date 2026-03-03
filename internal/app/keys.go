@@ -7,7 +7,7 @@ import "github.com/charmbracelet/bubbletea"
 
 // isQuit 检查是否为退出键
 func isQuit(msg tea.KeyMsg) bool {
-	return msg.String() == "ctrl+q"
+	return msg.String() == "q" || msg.String() == "Q"
 }
 
 // isUp 检查是否为向上移动键
@@ -79,7 +79,7 @@ func isDelete(msg tea.KeyMsg) bool {
 
 // isNewDir 检查是否为新建目录键
 func isNewDir(msg tea.KeyMsg) bool {
-	return msg.String() == "ctrl+n"
+	return msg.String() == "n" || msg.String() == "N"
 }
 
 // isRename 检查是否为重命名键（F2）
@@ -97,14 +97,14 @@ func isMove(msg tea.KeyMsg) bool {
 	return msg.String() == "f6"
 }
 
-// isEdit 检查是否为编辑键（Ctrl+E）
+// isEdit 检查是否为编辑键
 func isEdit(msg tea.KeyMsg) bool {
-	return msg.String() == "ctrl+e"
+	return msg.String() == "e" || msg.String() == "E"
 }
 
-// isSelectAll 检查是否为全选键（Ctrl+A）
+// isSelectAll 检查是否为全选键
 func isSelectAll(msg tea.KeyMsg) bool {
-	return msg.String() == "ctrl+a"
+	return msg.String() == "a" || msg.String() == "A"
 }
 
 // isScrollUp 检查预览区是否为向上滚动（仅当焦点在预览区时）
@@ -115,4 +115,14 @@ func isScrollUp(msg tea.KeyMsg) bool {
 // isScrollDown 检查预览区是否为向下滚动（仅当焦点在预览区时）
 func isScrollDown(msg tea.KeyMsg) bool {
 	return msg.String() == "down" || msg.String() == "j"
+}
+
+// isLeft 检查是否为向左键（返回上一级）
+func isLeft(msg tea.KeyMsg) bool {
+	return msg.String() == "left" || msg.String() == "h"
+}
+
+// isRight 检查是否为向右键（进入目录）
+func isRight(msg tea.KeyMsg) bool {
+	return msg.String() == "right" || msg.String() == "l"
 }
