@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/charmbracelet/bubbletea"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/haivo/fileman/internal/fileops"
 	"github.com/haivo/fileman/internal/types"
 	"github.com/haivo/fileman/internal/ui"
@@ -46,12 +46,12 @@ type Model struct {
 	contentHeight int
 
 	// 子组件
-	header   *ui.Header
-	footer   *ui.Footer
-	panelA   *ui.Panel
-	panelB   *ui.Panel
-	preview  *ui.PreviewPane
-	modal    *ui.Modal
+	header  *ui.Header
+	footer  *ui.Footer
+	panelA  *ui.Panel
+	panelB  *ui.Panel
+	preview *ui.PreviewPane
+	modal   *ui.Modal
 
 	// 焦点状态
 	focus types.FocusTarget
@@ -209,7 +209,9 @@ func (m *Model) calcSizes() {
 
 	// 计算可用内容宽度（去掉边框和padding）
 	// 外框总宽度 = m.width，边框左右各1列，padding左右各1列
-	contentWidth := m.width - 4 // -2 for 左右边框，-2 for 左右padding
+	// 另外再减去1列（右侧 margin），确保右侧边框完整显示
+	// MarginRight(1) 在 View 中通过 Width(m.width - 1) 实现
+	contentWidth := m.width - 6 // -2 border, -2 padding, -2 margin (为了保险起见，预留更多空间)
 
 	// 左栏宽度（40%），右栏宽度（60%）
 	// 布局：leftWidth + 垂直分隔(1) + rightWidth = contentWidth
