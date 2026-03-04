@@ -222,17 +222,29 @@ func (pv *PreviewPane) renderTextContent(height int) string {
 		lineNumStr := DefaultTheme.SubduedStyle.Render(lineNum + " ")
 
 		content := lines[i]
-		// 截断过长的行
-		runes := []rune(content)
-		if len(runes) > contentWidth {
-			content = string(runes[:contentWidth-1]) + "…"
-		}
+		
+		// 使用 lipgloss 自动折行
+		wrappedContent := lipgloss.NewStyle().Width(contentWidth).Render(content)
+		subLines := strings.Split(wrappedContent, "\n")
 
-		lineContent := lipgloss.NewStyle().Width(contentWidth).Render(content)
-		sb.WriteString(lineNumStr)
-		sb.WriteString(lineContent)
-		sb.WriteByte('\n')
-		rendered++
+		for j, subLine := range subLines {
+			if rendered >= height {
+				break
+			}
+
+			if j == 0 {
+				// 第一行显示行号
+				sb.WriteString(lineNumStr)
+			} else {
+				// 后续行显示空白占位
+				padding := strings.Repeat(" ", lineNumWidth+1) // +1 是为了匹配 lineNumStr 中的空格
+				sb.WriteString(DefaultTheme.SubduedStyle.Render(padding))
+			}
+
+			sb.WriteString(subLine)
+			sb.WriteByte('\n')
+			rendered++
+		}
 	}
 
 	// 填充空行
