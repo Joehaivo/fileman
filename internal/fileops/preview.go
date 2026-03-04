@@ -114,12 +114,13 @@ func isBinary(data []byte) bool {
 		0x0A: true, // LF (换行)
 		0x0D: true, // CR (回车)
 		0x1B: true, // ESC (ANSI转义序列)
+		0x0C: true, // FF (换页)
 	}
 
 	nullCount := 0
-	invalidUTF8Count := 0
+	invalidControlCount := 0
 	totalBytes := len(data)
-	
+
 	// 检查前1024字节（或全部，如果文件更小）
 	checkSize := totalBytes
 	if checkSize > 1024 {
@@ -128,7 +129,7 @@ func isBinary(data []byte) bool {
 
 	for i := 0; i < checkSize; i++ {
 		b := data[i]
-		
+
 		// null 字节通常是二进制文件的标志
 		if b == 0 {
 			nullCount++
@@ -137,15 +138,15 @@ func isBinary(data []byte) bool {
 				return true
 			}
 		}
-		
+
 		// 检查控制字符（0-31，除了允许的）
 		if b < 32 && !allowedControlChars[b] {
-			invalidUTF8Count++
+			invalidControlCount++
 		}
 	}
 
 	// 如果无效控制字符超过5%，可能是二进制文件
-	if invalidUTF8Count > checkSize/20 {
+	if invalidControlCount > checkSize/20 {
 		return true
 	}
 
@@ -154,13 +155,38 @@ func isBinary(data []byte) bool {
 	if len(checkData) > 1024 {
 		checkData = data[:1024]
 	}
-	
-	// 如果数据不是有效的UTF-8，尝试检查是否至少大部分是文本
-	if !utf8.Valid(checkData) {
+
+	// 统计有效 UTF-8 序列的字节数
+	validUTF8Bytes := 0
+	i := 0
+	for i < len(checkData) {
+		r, size := utf8.DecodeRune(checkData[i:])
+		if r == utf8.RuneError {
+			// 如果是 RuneError，可能是因为 buffer 截断
+			// 只有当不是因为截断导致的错误时，才认为是无效 UTF-8
+			// RuneError width is 1
+			if size == 1 {
+				// 检查是否在末尾
+				if i+size >= len(checkData) {
+					// 在末尾截断，视为有效（防止因截断导致误判为二进制）
+					validUTF8Bytes += size
+					break
+				}
+				// 真正的无效 UTF-8 序列
+				// 继续
+			}
+		} else {
+			validUTF8Bytes += size
+		}
+		i += size
+	}
+
+	// 如果有效 UTF-8 字节比例低于 80%，且不是纯 ASCII
+	if float64(validUTF8Bytes)/float64(len(checkData)) < 0.8 {
 		// 统计可打印字符的比例
 		printableCount := 0
 		for _, b := range checkData {
-			if (b >= 32 && b < 127) || b == 0x09 || b == 0x0A || b == 0x0D {
+			if (b >= 32 && b < 127) || allowedControlChars[b] {
 				printableCount++
 			}
 		}
