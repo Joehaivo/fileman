@@ -114,7 +114,7 @@ func (m Model) handleModalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		
 		switch msg.String() {
-		case "up", "k", "down", "j":
+		case "up", "down":
 			// 目前只有一个设置项，不需要移动
 		case " ":
 			if m.modal.Settings != nil {
@@ -305,7 +305,7 @@ func (m Model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.openInEditor()
 	}
 
-	if msg.String() == "s" || msg.String() == "S" {
+	if isSettings(msg) {
 		m.modal.ShowSettings(m.settings)
 		return m, nil
 	}

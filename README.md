@@ -17,8 +17,7 @@ FileMan 是一个基于 Go 语言和 [Bubble Tea](https://github.com/charmbracel
 
 ### 环境要求
 
-- Go 1.22 或更高版本
-- 推荐使用支持 [Nerd Font](https://www.nerdfonts.com/) 的终端字体以获得最佳体验。
+ 推荐使用支持 [Nerd Font](https://www.nerdfonts.com/) 的终端字体以获得最佳体验。
 
 ### 使用 Go 安装
 
