@@ -24,9 +24,9 @@ const (
 // Panel 文件面板组件，管理单个目录的文件列表显示
 type Panel struct {
 	Path          string             // 当前目录路径
-	Entries       []types.FileEntry  // 文件条目列表（不含 ".."）
+	Entries       []types.FileEntry  // 文件条目列表
 	Filtered      []types.FileEntry  // 过滤后的文件条目列表
-	Cursor        int                // 当前光标位置（0 = ".."）
+	Cursor        int                // 当前光标位置
 	Offset        int                // 列表滚动偏移量
 	Width         int                // 面板宽度（不含边框）
 	Height        int                // 面板高度（不含边框）
@@ -57,7 +57,6 @@ func (p *Panel) SetSize(width, height int) {
 }
 
 // visibleEntries 返回当前可见的文件条目列表（考虑搜索过滤）
-// 索引 0 始终是 ".."（上级目录），返回列表从 1 开始是实际文件
 func (p *Panel) visibleEntries() []types.FileEntry {
 	if p.IsSearching && p.SearchQuery != "" {
 		return p.Filtered
@@ -65,22 +64,18 @@ func (p *Panel) visibleEntries() []types.FileEntry {
 	return p.Entries
 }
 
-// TotalItems 返回总条目数（含 ".." 占位）
+// TotalItems 返回总条目数
 func (p *Panel) TotalItems() int {
-	return len(p.visibleEntries()) + 1 // +1 for ".."
+	return len(p.visibleEntries())
 }
 
-// CurrentEntry 返回当前光标所在的 FileEntry，光标在 ".." 时返回 nil
+// CurrentEntry 返回当前光标所在的 FileEntry
 func (p *Panel) CurrentEntry() *types.FileEntry {
-	if p.Cursor == 0 {
-		return nil
-	}
 	entries := p.visibleEntries()
-	idx := p.Cursor - 1
-	if idx < 0 || idx >= len(entries) {
+	if p.Cursor < 0 || p.Cursor >= len(entries) {
 		return nil
 	}
-	e := entries[idx]
+	e := entries[p.Cursor]
 	return &e
 }
 
@@ -170,19 +165,13 @@ func (p *Panel) SetCursorByName(name string) {
 	}
 
 	// 查找匹配的文件名
-	targetIdx := -1
 	entries := p.visibleEntries()
 	for i, e := range entries {
 		if e.Name == name {
-			targetIdx = i
+			p.Cursor = i
+			p.clampScrollOffset()
 			break
 		}
-	}
-
-	if targetIdx != -1 {
-		// Cursor 是基于 visibleEntries 的索引 + 1 (因为 0 是 "..")
-		p.Cursor = targetIdx + 1
-		p.clampScrollOffset()
 	}
 }
 
@@ -267,7 +256,7 @@ func (p *Panel) Render() string {
 	}
 
 	// 重新计算滚动范围（基于减去标题后的高度）
-	total := len(entries) + 1 // +1 for ".."
+	total := len(entries)
 	start := p.Offset
 	end := start + visibleHeight
 	if end > total {
@@ -324,57 +313,13 @@ func (p *Panel) renderPathLine() string {
 }
 
 // renderLine 渲染单行文件条目
-// idx: 在总列表中的索引（0 = ".."）
 func (p *Panel) renderLine(idx int, entries []types.FileEntry) string {
 	isCursor := idx == p.Cursor
 
-	var content string
-	if idx == 0 {
-		content = p.renderParentDirLine(isCursor)
-	} else {
-		entry := entries[idx-1]
-		content = p.renderEntryLine(entry, isCursor)
-	}
+	entry := entries[idx]
+	content := p.renderEntryLine(entry, isCursor)
 
 	return content
-}
-
-// renderParentDirLine 渲染 ".." 上级目录行
-func (p *Panel) renderParentDirLine(isCursor bool) string {
-	icon := " "
-	text := fmt.Sprintf("%s ..", icon)
-
-	// 计算内容宽度（所有行都应该有左右 padding，以保证对齐）
-	// 总宽度 = p.Width
-	// Padding = 2 (left 1, right 1)
-	contentWidth := p.Width - 2
-
-	if contentWidth < 1 {
-		contentWidth = 1
-	}
-
-	// 补全空格使 text 填满 contentWidth
-	currentWidth := lipgloss.Width(text)
-	if currentWidth < contentWidth {
-		text += strings.Repeat(" ", contentWidth-currentWidth)
-	}
-
-	if isCursor {
-		style := DefaultTheme.CursorStyle
-		if !p.IsFocused {
-			style = style.Copy().Background(ColorBorderNormal).Foreground(ColorSubdued)
-		}
-		// CursorStyle 已经包含了 Padding(0, 1)
-		return style.Width(p.Width).Render(text)
-	}
-
-	style := DefaultTheme.DirStyle
-	if !p.IsFocused {
-		style = style.Copy().Foreground(ColorSubdued)
-	}
-
-	// 非光标行也需要 Padding(0, 1) 来对齐，但没有背景色
-	return lipgloss.NewStyle().Padding(0, 1).Width(p.Width).Render(style.Render(text))
 }
 
 // renderEntryLine 渲染文件条目行

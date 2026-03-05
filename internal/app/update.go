@@ -357,11 +357,6 @@ func (m Model) handleGoUp() (tea.Model, tea.Cmd) {
 func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	panel := m.activePanel()
 
-	if panel.Cursor == 0 {
-		// 返回上级目录
-		return m.handleGoUp()
-	}
-
 	entry := panel.CurrentEntry()
 	if entry == nil {
 		return m, nil
