@@ -219,53 +219,9 @@ func (m Model) handleEditKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.cancelEdit()
 	}
 
-	// 方向键移动光标
-	if isUp(msg) {
-		m.preview.MoveCursorUp()
-		return m, nil
-	}
-	if isDown(msg) {
-		m.preview.MoveCursorDown()
-		return m, nil
-	}
-	if isLeft(msg) {
-		m.preview.MoveCursorLeft()
-		return m, nil
-	}
-	if isRight(msg) {
-		m.preview.MoveCursorRight()
-		return m, nil
-	}
-
-	// Backspace 删除前一个字符
-	if msg.String() == "backspace" || msg.String() == "ctrl+h" {
-		m.preview.Backspace()
-		return m, nil
-	}
-
-	// Delete 删除当前字符
-	if msg.String() == "delete" {
-		m.preview.DeleteChar()
-		return m, nil
-	}
-
-	// Enter 换行
-	if isEnter(msg) {
-		m.preview.InsertNewline()
-		return m, nil
-	}
-
-	// 其他可输入字符
-	if len(msg.Runes) > 0 {
-		for _, ch := range msg.Runes {
-			// 过滤控制字符
-			if ch >= 32 || ch == '\t' {
-				m.preview.InsertChar(ch)
-			}
-		}
-	}
-
-	return m, nil
+	// 其他按键交给 textarea 处理
+	cmd := m.preview.UpdateEditor(msg)
+	return m, cmd
 }
 
 // handleNormalKey 处理普通模式按键

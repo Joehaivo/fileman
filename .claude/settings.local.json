@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go doc:*)",
+      "Bash(go mod:*)",
+      "Bash(timeout 2 ./fileman:*)",
+      "Bash(go:*)"
+    ]
+  }
+}
