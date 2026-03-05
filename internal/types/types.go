@@ -68,8 +68,9 @@ func (s SelectionSet) Len() int {
 type FocusTarget int
 
 const (
-	FocusPanelA FocusTarget = iota // 上方文件面板
-	FocusPanelB                    // 下方文件面板
+	FocusPanelA   FocusTarget = iota // 上方文件面板
+	FocusPanelB                      // 下方文件面板
+	FocusPreview                     // 预览/编辑区
 )
 
 // ModalType 模态弹窗类型

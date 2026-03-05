@@ -3,7 +3,6 @@
 FileMan 是一个基于 Go 语言和 [Bubble Tea](https://github.com/charmbracelet/bubbletea) 框架构建的现代化终端文件管理器（TUI）。它提供了双面板界面、实时文件预览以及高效的键盘导航，专为追求效率的开发者和极客设计。
 
 ## ✨ 功能特性
-
 - **双面板界面**：经典的左右双栏设计，支持 Tab 键快速切换焦点，文件管理更高效。
 - **实时预览**：支持文本文件内容预览（带行号），自动识别并展示文件详细信息。
 - **图标支持**：集成 Nerd Fonts 图标支持，让终端界面更加美观直观。
@@ -68,7 +67,7 @@ go build -o fm .
 ## 🏗️ 技术栈
 
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) - 强大的 TUI 框架
-- [Lip Gloss](https://github.com/charmbracelet/lipgloss) - 界面样式定义
+dd - [Lip Gloss](https://github.com/charmbracelet/lipgloss) - 界面样式定义
 - [Bubbles](https://github.com/charmbracelet/bubbles) - TUI 组件库
 
 ## 📄 许可证

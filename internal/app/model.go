@@ -63,6 +63,9 @@ type Model struct {
 	isSearching bool
 	searchQuery string
 
+	// 编辑模式
+	isEditing bool
+
 	// 选中文件总大小（Header 显示用）
 	selectionTotalSize int64
 
@@ -191,6 +194,8 @@ func applyPanelLoad(p *ui.Panel, msg panelLoadMsg) {
 func (m *Model) updatePreview() {
 	entry := m.activePanel().CurrentEntry()
 	m.preview.SetEntry(entry)
+	// 更新 footer 的编辑可用状态
+	m.footer.CanEdit = m.preview.IsEditable()
 }
 
 // calcSizes 计算并应用所有组件的尺寸

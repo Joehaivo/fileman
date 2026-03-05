@@ -126,3 +126,13 @@ func isLeft(msg tea.KeyMsg) bool {
 func isRight(msg tea.KeyMsg) bool {
 	return msg.String() == "right"
 }
+
+// isSave 检查是否为保存键（F3）
+func isSave(msg tea.KeyMsg) bool {
+	return msg.String() == "f3"
+}
+
+// isExitEdit 检查是否为退出编辑键（F4）
+func isExitEdit(msg tea.KeyMsg) bool {
+	return msg.String() == "f4"
+}

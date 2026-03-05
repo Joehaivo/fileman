@@ -11,11 +11,17 @@ import (
 
 // PreviewPane 右侧预览组件
 type PreviewPane struct {
-	Entry   *types.FileEntry          // 当前预览的文件条目
-	Result  *fileops.PreviewResult    // 预览读取结果
-	Width   int                       // 预览区宽度（不含边框）
-	Height  int                       // 预览区高度（不含边框）
-	ScrollY int                       // 垂直滚动偏移（行数）
+	Entry    *types.FileEntry       // 当前预览的文件条目
+	Result   *fileops.PreviewResult // 预览读取结果
+	Width    int                    // 预览区宽度（不含边框）
+	Height   int                    // 预览区高度（不含边框）
+	ScrollY  int                    // 垂直滚动偏移（行数）
+	IsEdit   bool                   // 是否处于编辑模式
+	Lines    []string               // 编辑内容（按行存储）
+	CursorY  int                    // 光标行号（0-based）
+	CursorX  int                    // 光标列号（字符位置，0-based）
+	ScrollX  int                    // 水平滚动偏移（字符数）
+	Modified bool                   // 是否已修改
 }
 
 // NewPreviewPane 创建新的预览组件
@@ -35,12 +41,23 @@ func (pv *PreviewPane) SetEntry(entry *types.FileEntry) {
 	pv.Entry = entry
 	pv.ScrollY = 0
 	pv.Result = nil
+	pv.IsEdit = false
+	pv.Lines = nil
+	pv.CursorY = 0
+	pv.CursorX = 0
+	pv.ScrollX = 0
+	pv.Modified = false
 
 	if entry == nil || entry.IsDir {
 		return
 	}
 
 	pv.Result = fileops.ReadPreview(*entry)
+	// 为编辑准备内容
+	if pv.Result != nil && !pv.Result.IsBinary && !pv.Result.IsTooLarge && pv.Result.Error == "" {
+		pv.Lines = make([]string, len(pv.Result.Lines))
+		copy(pv.Lines, pv.Result.Lines)
+	}
 }
 
 // ScrollUp 预览内容向上滚动
@@ -93,6 +110,229 @@ func (pv *PreviewPane) clampScroll() {
 	}
 	if pv.ScrollY > maxScroll {
 		pv.ScrollY = maxScroll
+	}
+}
+
+// IsEditable 返回当前文件是否可编辑（文本文件且有预览内容）
+func (pv *PreviewPane) IsEditable() bool {
+	return pv.Entry != nil &&
+		!pv.Entry.IsDir &&
+		pv.Result != nil &&
+		!pv.Result.IsBinary &&
+		!pv.Result.IsTooLarge &&
+		pv.Result.Error == "" &&
+		len(pv.Lines) > 0
+}
+
+// EnterEdit 进入编辑模式
+func (pv *PreviewPane) EnterEdit() {
+	if !pv.IsEditable() {
+		return
+	}
+	pv.IsEdit = true
+	pv.CursorY = 0
+	pv.CursorX = 0
+	pv.ScrollY = 0
+	pv.ScrollX = 0
+	pv.clampEditCursor()
+}
+
+// ExitEdit 退出编辑模式
+func (pv *PreviewPane) ExitEdit() {
+	pv.IsEdit = false
+}
+
+// GetContent 获取编辑内容（用于保存）
+func (pv *PreviewPane) GetContent() string {
+	return strings.Join(pv.Lines, "\n")
+}
+
+// clampEditCursor 确保光标在有效范围内
+func (pv *PreviewPane) clampEditCursor() {
+	if len(pv.Lines) == 0 {
+		pv.CursorY = 0
+		pv.CursorX = 0
+		return
+	}
+
+	// 限制行号
+	if pv.CursorY < 0 {
+		pv.CursorY = 0
+	}
+	if pv.CursorY >= len(pv.Lines) {
+		pv.CursorY = len(pv.Lines) - 1
+	}
+
+	// 限制列号（允许在行尾+1位置）
+	lineLen := len([]rune(pv.Lines[pv.CursorY]))
+	if pv.CursorX < 0 {
+		pv.CursorX = 0
+	}
+	if pv.CursorX > lineLen {
+		pv.CursorX = lineLen
+	}
+}
+
+// clampEditScroll 确保光标在可视区域内
+func (pv *PreviewPane) clampEditScroll() {
+	contentH := pv.contentHeight()
+	lineNumWidth := pv.lineNumWidth()
+	contentW := pv.Width - lineNumWidth - 2
+	if contentW < 1 {
+		contentW = 1
+	}
+
+	// 垂直滚动
+	if pv.CursorY < pv.ScrollY {
+		pv.ScrollY = pv.CursorY
+	}
+	if pv.CursorY >= pv.ScrollY+contentH {
+		pv.ScrollY = pv.CursorY - contentH + 1
+	}
+
+	// 水平滚动（处理超长行）
+	cursorVisualX := pv.CursorX // 字符位置
+	if cursorVisualX < pv.ScrollX {
+		pv.ScrollX = cursorVisualX
+	}
+	if cursorVisualX >= pv.ScrollX+contentW {
+		pv.ScrollX = cursorVisualX - contentW + 1
+	}
+}
+
+// lineNumWidth 计算行号宽度
+func (pv *PreviewPane) lineNumWidth() int {
+	total := len(pv.Lines)
+	if total < 1 {
+		total = 1
+	}
+	width := len(fmt.Sprintf("%d", total))
+	if width < 3 {
+		width = 3
+	}
+	return width
+}
+
+// MoveCursorUp 光标上移
+func (pv *PreviewPane) MoveCursorUp() {
+	if pv.CursorY > 0 {
+		pv.CursorY--
+		pv.clampEditCursor()
+		pv.clampEditScroll()
+	}
+}
+
+// MoveCursorDown 光标下移
+func (pv *PreviewPane) MoveCursorDown() {
+	if pv.CursorY < len(pv.Lines)-1 {
+		pv.CursorY++
+		pv.clampEditCursor()
+		pv.clampEditScroll()
+	}
+}
+
+// MoveCursorLeft 光标左移
+func (pv *PreviewPane) MoveCursorLeft() {
+	if pv.CursorX > 0 {
+		pv.CursorX--
+		pv.clampEditScroll()
+	} else if pv.CursorY > 0 {
+		// 移到上一行末尾
+		pv.CursorY--
+		pv.CursorX = len([]rune(pv.Lines[pv.CursorY]))
+		pv.clampEditScroll()
+	}
+}
+
+// MoveCursorRight 光标右移
+func (pv *PreviewPane) MoveCursorRight() {
+	lineLen := len([]rune(pv.Lines[pv.CursorY]))
+	if pv.CursorX < lineLen {
+		pv.CursorX++
+		pv.clampEditScroll()
+	} else if pv.CursorY < len(pv.Lines)-1 {
+		// 移到下一行开头
+		pv.CursorY++
+		pv.CursorX = 0
+		pv.clampEditScroll()
+	}
+}
+
+// InsertChar 在光标位置插入字符
+func (pv *PreviewPane) InsertChar(ch rune) {
+	line := pv.Lines[pv.CursorY]
+	runes := []rune(line)
+
+	// 在 CursorX 位置插入
+	newRunes := make([]rune, 0, len(runes)+1)
+	newRunes = append(newRunes, runes[:pv.CursorX]...)
+	newRunes = append(newRunes, ch)
+	newRunes = append(newRunes, runes[pv.CursorX:]...)
+
+	pv.Lines[pv.CursorY] = string(newRunes)
+	pv.CursorX++
+	pv.Modified = true
+	pv.clampEditScroll()
+}
+
+// InsertNewline 在光标位置插入换行
+func (pv *PreviewPane) InsertNewline() {
+	line := pv.Lines[pv.CursorY]
+	runes := []rune(line)
+
+	// 分割当前行
+	before := string(runes[:pv.CursorX])
+	after := string(runes[pv.CursorX:])
+
+	pv.Lines[pv.CursorY] = before
+	// 在下一行插入
+	newLines := make([]string, 0, len(pv.Lines)+1)
+	newLines = append(newLines, pv.Lines[:pv.CursorY+1]...)
+	newLines = append(newLines, after)
+	newLines = append(newLines, pv.Lines[pv.CursorY+1:]...)
+	pv.Lines = newLines
+
+	pv.CursorY++
+	pv.CursorX = 0
+	pv.Modified = true
+	pv.clampEditScroll()
+}
+
+// DeleteChar 删除光标位置的字符
+func (pv *PreviewPane) DeleteChar() {
+	line := pv.Lines[pv.CursorY]
+	runes := []rune(line)
+
+	if pv.CursorX < len(runes) {
+		// 删除当前字符
+		newRunes := make([]rune, 0, len(runes)-1)
+		newRunes = append(newRunes, runes[:pv.CursorX]...)
+		newRunes = append(newRunes, runes[pv.CursorX+1:]...)
+		pv.Lines[pv.CursorY] = string(newRunes)
+		pv.Modified = true
+	}
+}
+
+// Backspace 退格删除
+func (pv *PreviewPane) Backspace() {
+	if pv.CursorX > 0 {
+		// 删除前一个字符
+		pv.CursorX--
+		pv.DeleteChar()
+	} else if pv.CursorY > 0 {
+		// 合并到上一行
+		prevLine := pv.Lines[pv.CursorY-1]
+		currLine := pv.Lines[pv.CursorY]
+		prevLen := len([]rune(prevLine))
+
+		pv.Lines[pv.CursorY-1] = prevLine + currLine
+		// 删除当前行
+		pv.Lines = append(pv.Lines[:pv.CursorY], pv.Lines[pv.CursorY+1:]...)
+
+		pv.CursorY--
+		pv.CursorX = prevLen
+		pv.Modified = true
+		pv.clampEditScroll()
 	}
 }
 
@@ -176,6 +416,11 @@ func (pv *PreviewPane) renderContent(height int) string {
 		return pv.renderPlaceholder(height, pv.Result.Error)
 	}
 
+	// 编辑模式使用编辑渲染
+	if pv.IsEdit {
+		return pv.renderEditContent(height)
+	}
+
 	return pv.renderTextContent(height)
 }
 
@@ -222,7 +467,7 @@ func (pv *PreviewPane) renderTextContent(height int) string {
 		lineNumStr := DefaultTheme.SubduedStyle.Render(lineNum + " ")
 
 		content := lines[i]
-		
+
 		// 使用 lipgloss 自动折行
 		wrappedContent := lipgloss.NewStyle().Width(contentWidth).Render(content)
 		subLines := strings.Split(wrappedContent, "\n")
@@ -245,6 +490,90 @@ func (pv *PreviewPane) renderTextContent(height int) string {
 			sb.WriteByte('\n')
 			rendered++
 		}
+	}
+
+	// 填充空行
+	for rendered < height {
+		sb.WriteString(strings.Repeat(" ", pv.Width))
+		sb.WriteByte('\n')
+		rendered++
+	}
+
+	return sb.String()
+}
+
+// renderEditContent 渲染编辑模式内容（带光标）
+func (pv *PreviewPane) renderEditContent(height int) string {
+	total := len(pv.Lines)
+	lineNumWidth := pv.lineNumWidth()
+
+	// 内容可用宽度（减去行号区域）
+	contentWidth := pv.Width - lineNumWidth - 2
+	if contentWidth < 1 {
+		contentWidth = 1
+	}
+
+	var sb strings.Builder
+	rendered := 0
+
+	for i := pv.ScrollY; i < total && rendered < height; i++ {
+		lineNum := fmt.Sprintf("%*d", lineNumWidth, i+1)
+		lineNumStr := DefaultTheme.SubduedStyle.Render(lineNum + " ")
+
+		line := pv.Lines[i]
+		runes := []rune(line)
+
+		// 处理超长行：水平滚动
+		var displayRunes []rune
+		if len(runes) > contentWidth {
+			end := pv.ScrollX + contentWidth
+			if end > len(runes) {
+				end = len(runes)
+			}
+			displayRunes = runes[pv.ScrollX:end]
+		} else {
+			displayRunes = runes
+		}
+
+		// 当前行的光标位置（屏幕坐标）
+		cursorScreenX := pv.CursorX - pv.ScrollX
+
+		// 判断是否是光标所在行
+		if i == pv.CursorY && cursorScreenX >= 0 && cursorScreenX <= len(displayRunes) {
+			// 渲染带光标的行
+			before := string(displayRunes[:cursorScreenX])
+			after := ""
+			if cursorScreenX < len(displayRunes) {
+				// 光标在字符上，高亮该字符
+				after = string(displayRunes[cursorScreenX:])
+			}
+			// 光标使用反色显示
+			cursorChar := " " // 光标在行尾时显示空格
+			if cursorScreenX < len(displayRunes) {
+				cursorChar = string(displayRunes[cursorScreenX])
+				after = string(displayRunes[cursorScreenX+1:])
+			}
+			cursorStyle := lipgloss.NewStyle().Reverse(true)
+			content := before + cursorStyle.Render(cursorChar) + after
+			// 补全宽度
+			if len([]rune(content)) < contentWidth {
+				content += strings.Repeat(" ", contentWidth-len([]rune(content)))
+			}
+			sb.WriteString(lineNumStr)
+			sb.WriteString(content)
+		} else {
+			// 普通行
+			content := string(displayRunes)
+			// 补全宽度
+			if len([]rune(content)) < contentWidth {
+				content += strings.Repeat(" ", contentWidth-len([]rune(content)))
+			}
+			sb.WriteString(lineNumStr)
+			sb.WriteString(content)
+		}
+
+		sb.WriteByte('\n')
+		rendered++
 	}
 
 	// 填充空行

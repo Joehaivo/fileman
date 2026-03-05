@@ -64,6 +64,11 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleModalKey(msg)
 	}
 
+	// 编辑模式下的按键处理
+	if m.isEditing {
+		return m.handleEditKey(msg)
+	}
+
 	// 搜索模式下的按键处理
 	if m.isSearching {
 		return m.handleSearchKey(msg)
@@ -202,6 +207,67 @@ func (m *Model) applySearch() {
 	m.updatePreview()
 }
 
+// handleEditKey 处理编辑模式下的按键
+func (m Model) handleEditKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// F3 保存并退出
+	if isSave(msg) {
+		return m.saveEdit()
+	}
+
+	// F4 放弃更改并退出
+	if isExitEdit(msg) {
+		return m.cancelEdit()
+	}
+
+	// 方向键移动光标
+	if isUp(msg) {
+		m.preview.MoveCursorUp()
+		return m, nil
+	}
+	if isDown(msg) {
+		m.preview.MoveCursorDown()
+		return m, nil
+	}
+	if isLeft(msg) {
+		m.preview.MoveCursorLeft()
+		return m, nil
+	}
+	if isRight(msg) {
+		m.preview.MoveCursorRight()
+		return m, nil
+	}
+
+	// Backspace 删除前一个字符
+	if msg.String() == "backspace" || msg.String() == "ctrl+h" {
+		m.preview.Backspace()
+		return m, nil
+	}
+
+	// Delete 删除当前字符
+	if msg.String() == "delete" {
+		m.preview.DeleteChar()
+		return m, nil
+	}
+
+	// Enter 换行
+	if isEnter(msg) {
+		m.preview.InsertNewline()
+		return m, nil
+	}
+
+	// 其他可输入字符
+	if len(msg.Runes) > 0 {
+		for _, ch := range msg.Runes {
+			// 过滤控制字符
+			if ch >= 32 || ch == '\t' {
+				m.preview.InsertChar(ch)
+			}
+		}
+	}
+
+	return m, nil
+}
+
 // handleNormalKey 处理普通模式按键
 func (m Model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	if isQuit(msg) {
@@ -253,7 +319,11 @@ func (m Model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 
 	if isEnter(msg) {
-		return m.handleEnter()
+		// 如果当前文件可编辑，进入编辑模式
+		if m.preview.IsEditable() {
+			return m.enterEditMode()
+		}
+		return m, nil
 	}
 
 	if isLeft(msg) {
@@ -336,6 +406,57 @@ func (m Model) enterSearchMode() (tea.Model, tea.Cmd) {
 	m.header.IsSearching = true
 	m.header.SearchQuery = ""
 	m.footer.IsSearching = true
+	return m, nil
+}
+
+// enterEditMode 进入编辑模式
+func (m Model) enterEditMode() (tea.Model, tea.Cmd) {
+	if !m.preview.IsEditable() {
+		return m, nil
+	}
+	m.isEditing = true
+	m.preview.EnterEdit()
+	m.footer.IsEditing = true
+	return m, nil
+}
+
+// saveEdit 保存编辑内容并退出编辑模式
+func (m Model) saveEdit() (tea.Model, tea.Cmd) {
+	if m.preview.Entry == nil {
+		return m, nil
+	}
+
+	content := m.preview.GetContent()
+	filePath := m.preview.Entry.Path
+
+	// 保存文件
+	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+		m.modal.ShowError(err.Error())
+		return m, nil
+	}
+
+	// 退出编辑模式，返回文件面板
+	m.isEditing = false
+	m.preview.ExitEdit()
+	m.footer.IsEditing = false
+	m.footer.CanEdit = m.preview.IsEditable()
+
+	// 刷新预览
+	m.updatePreview()
+
+	return m, nil
+}
+
+// cancelEdit 放弃更改并退出编辑模式
+func (m Model) cancelEdit() (tea.Model, tea.Cmd) {
+	m.isEditing = false
+	m.preview.ExitEdit()
+	m.footer.IsEditing = false
+	m.footer.CanEdit = m.preview.IsEditable()
+
+	// 刷新预览（恢复原始内容）
+	m.updatePreview()
+
 	return m, nil
 }
 
