@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/haivo/fileman/internal/fileops"
 	"github.com/haivo/fileman/internal/types"
 	"github.com/haivo/fileman/internal/ui"
@@ -50,7 +50,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		return m.handleKey(msg)
 	}
 
@@ -58,7 +58,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // handleKey 处理键盘事件，根据当前状态分发
-func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m Model) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	// 弹窗模式下的按键处理
 	if m.modal.IsVisible() {
 		return m.handleModalKey(msg)
@@ -79,7 +79,7 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 // handleModalKey 处理弹窗模式下的按键
-func (m Model) handleModalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m Model) handleModalKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch m.modal.Type {
 	case types.ModalDelete:
 		if isEnter(msg) {
@@ -131,7 +131,7 @@ func (m Model) handleModalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			if m.modal.SettingsIdx < 1 { // 共 2 个设置项，索引 0-1
 				m.modal.SettingsIdx++
 			}
-		case " ":
+		case "space":
 			if m.modal.Settings != nil {
 				switch m.modal.SettingsIdx {
 				case 0:
@@ -159,7 +159,7 @@ func (m Model) handleModalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 // handleSearchKey 处理搜索模式下的按键
-func (m Model) handleSearchKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m Model) handleSearchKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	if isEscape(msg) {
 		// 退出搜索，恢复完整列表
 		m.isSearching = false
@@ -206,8 +206,9 @@ func (m Model) handleSearchKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 
 	// 其他字符追加到搜索词
-	if len(msg.Runes) > 0 {
-		m.searchQuery += string(msg.Runes)
+	// v2: msg.Runes -> msg.Text
+	if msg.Text != "" {
+		m.searchQuery += msg.Text
 		m.applySearch()
 	}
 
@@ -223,7 +224,7 @@ func (m *Model) applySearch() {
 }
 
 // handleEditKey 处理编辑模式下的按键
-func (m Model) handleEditKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m Model) handleEditKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	// F3 保存并退出
 	if isSave(msg) {
 		return m.saveEdit()
@@ -240,7 +241,7 @@ func (m Model) handleEditKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 // handleNormalKey 处理普通模式按键
-func (m Model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m Model) handleNormalKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	if isQuit(msg) {
 		return m, tea.Quit
 	}

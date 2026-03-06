@@ -3,9 +3,10 @@ package ui
 import (
 	"strings"
 
-	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/textinput"
+	"charm.land/lipgloss/v2"
 	"github.com/haivo/fileman/internal/types"
+	"image/color"
 )
 
 // Modal 模态弹窗组件
@@ -26,7 +27,7 @@ type Modal struct {
 func NewModal() *Modal {
 	ti := textinput.New()
 	ti.CharLimit = 255
-	ti.Width = 30
+	ti.SetWidth(30)
 
 	return &Modal{
 		Type:  types.ModalNone,
@@ -38,9 +39,9 @@ func NewModal() *Modal {
 func (m *Modal) SetSize(width, height int) {
 	m.ScreenWidth = width
 	m.ScreenHeight = height
-	m.Input.Width = width/3 - 4
-	if m.Input.Width < 20 {
-		m.Input.Width = 20
+	m.Input.SetWidth(width/3 - 4)
+	if m.Input.Width() < 20 {
+		m.Input.SetWidth(20)
 	}
 }
 
@@ -195,7 +196,7 @@ func (m *Modal) Render() string {
 	content.WriteString(hints)
 
 	// 弹窗边框样式 - 使用艳丽配色
-	var borderColor lipgloss.Color
+	var borderColor color.Color
 	switch m.Type {
 	case types.ModalDelete:
 		borderColor = ColorError // 红色

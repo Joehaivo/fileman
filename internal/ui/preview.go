@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/textarea"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/textarea"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/haivo/fileman/internal/fileops"
 	"github.com/haivo/fileman/internal/types"
 )
@@ -28,9 +28,8 @@ func NewPreviewPane() *PreviewPane {
 	ta.ShowLineNumbers = true
 
 	// 设置自定义样式
-	focusedStyle, blurredStyle := customTextareaStyles()
-	ta.FocusedStyle = focusedStyle
-	ta.BlurredStyle = blurredStyle
+	styles := customTextareaStyles()
+	ta.SetStyles(styles)
 
 	// 默认处于预览模式（blur 状态）
 	ta.Blur()
@@ -41,19 +40,20 @@ func NewPreviewPane() *PreviewPane {
 }
 
 // customTextareaStyles 自定义 textarea 样式以匹配 fileman 主题
-func customTextareaStyles() (textarea.Style, textarea.Style) {
-	focused, blurred := textarea.DefaultStyles()
+func customTextareaStyles() textarea.Styles {
+	// 使用暗色主题
+	styles := textarea.DefaultDarkStyles()
 
 	// 匹配 fileman 主题
-	focused.LineNumber = DefaultTheme.SubduedStyle
-	focused.CursorLine = lipgloss.NewStyle() // 无高亮背景
-	focused.Placeholder = DefaultTheme.SubduedStyle
+	styles.Focused.LineNumber = DefaultTheme.SubduedStyle
+	styles.Focused.CursorLine = lipgloss.NewStyle() // 无高亮背景
+	styles.Focused.Placeholder = DefaultTheme.SubduedStyle
 
-	blurred.LineNumber = DefaultTheme.SubduedStyle
-	blurred.CursorLine = lipgloss.NewStyle()
-	blurred.Placeholder = DefaultTheme.SubduedStyle
+	styles.Blurred.LineNumber = DefaultTheme.SubduedStyle
+	styles.Blurred.CursorLine = lipgloss.NewStyle()
+	styles.Blurred.Placeholder = DefaultTheme.SubduedStyle
 
-	return focused, blurred
+	return styles
 }
 
 // SetSize 设置预览区尺寸
@@ -111,22 +111,22 @@ func (pv *PreviewPane) SetEntry(entry *types.FileEntry) {
 // ScrollUp 预览内容向上滚动
 func (pv *PreviewPane) ScrollUp() {
 	// textarea 内置滚动，这里转发给 editor
-	pv.Editor, _ = pv.Editor.Update(tea.KeyMsg{Type: tea.KeyUp})
+	pv.Editor, _ = pv.Editor.Update(tea.KeyPressMsg{Code: tea.KeyUp})
 }
 
 // ScrollDown 预览内容向下滚动
 func (pv *PreviewPane) ScrollDown() {
-	pv.Editor, _ = pv.Editor.Update(tea.KeyMsg{Type: tea.KeyDown})
+	pv.Editor, _ = pv.Editor.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 }
 
 // ScrollPageUp 向上翻页
 func (pv *PreviewPane) ScrollPageUp() {
-	pv.Editor, _ = pv.Editor.Update(tea.KeyMsg{Type: tea.KeyPgUp})
+	pv.Editor, _ = pv.Editor.Update(tea.KeyPressMsg{Code: tea.KeyPgUp})
 }
 
 // ScrollPageDown 向下翻页
 func (pv *PreviewPane) ScrollPageDown() {
-	pv.Editor, _ = pv.Editor.Update(tea.KeyMsg{Type: tea.KeyPgDown})
+	pv.Editor, _ = pv.Editor.Update(tea.KeyPressMsg{Code: tea.KeyPgDown})
 }
 
 // IsEditable 返回当前文件是否可编辑（文本文件且有预览内容）
@@ -141,8 +141,8 @@ func (pv *PreviewPane) EnterEdit() {
 	if !pv.IsEditable() {
 		return
 	}
-	// 通过发送 Ctrl+Home 将光标移到文本开头
-	pv.Editor, _ = pv.Editor.Update(tea.KeyMsg{Type: tea.KeyHome})
+	// 通过发送 Home 将光标移到文本开头
+	pv.Editor, _ = pv.Editor.Update(tea.KeyPressMsg{Code: tea.KeyHome})
 	pv.Editor.Focus()
 }
 

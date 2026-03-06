@@ -4,11 +4,16 @@
       "Bash(go doc:*)",
       "Bash(go mod:*)",
       "Bash(timeout 2 ./fileman:*)",
-      "Bash(go:*)"
+      "Bash(go:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:goproxy.cn)",
+      "WebFetch(domain:proxy.golang.org)",
+      "WebFetch(domain:charm.land)",
+      "WebFetch(domain:golang.org)"
     ]
   },
   "sandbox": {
-    "enabled": true,
-    "autoAllowBashIfSandboxed": true
+    "enabled": false,
+    "autoAllowBashIfSandboxed": false
   }
 }

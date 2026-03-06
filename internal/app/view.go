@@ -3,32 +3,40 @@ package app
 import (
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/haivo/fileman/internal/types"
 	"github.com/haivo/fileman/internal/ui"
 )
 
 // View 实现 tea.Model 接口，渲染整个 TUI 界面
-func (m Model) View() string {
+func (m Model) View() tea.View {
+	var content string
+
 	// 窗口过小时显示提示
 	if m.width < minWidth || m.height < minHeight {
-		return lipgloss.NewStyle().
+		content = lipgloss.NewStyle().
 			Width(m.width).
 			Height(m.height).
 			Align(lipgloss.Center, lipgloss.Center).
 			Render("窗口太小，请调整终端大小\n最小尺寸: 60×20")
+	} else {
+		// 构建完整界面
+		frame := m.renderFrame()
+
+		// 若弹窗可见，将弹窗覆盖在界面上
+		if m.modal.IsVisible() {
+			content = m.modal.Render()
+		} else {
+			content = frame
+		}
 	}
 
-	// 构建完整界面
-	frame := m.renderFrame()
-
-	// 若弹窗可见，将弹窗覆盖在界面上
-	if m.modal.IsVisible() {
-		overlay := m.modal.Render()
-		return overlay
-	}
-
-	return frame
+	// 创建 tea.View 并设置 AltScreen 和 MouseMode
+	v := tea.NewView(content)
+	v.AltScreen = true
+	v.MouseMode = tea.MouseModeCellMotion
+	return v
 }
 
 // renderFrame 渲染主框架（边框 + Header + Content + Footer）

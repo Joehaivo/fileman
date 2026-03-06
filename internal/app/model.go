@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/haivo/fileman/internal/fileops"
 	"github.com/haivo/fileman/internal/types"
 	"github.com/haivo/fileman/internal/ui"
