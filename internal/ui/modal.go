@@ -3,24 +3,25 @@ package ui
 import (
 	"strings"
 
+	"image/color"
+
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/lipgloss/v2"
 	"github.com/haivo/fileman/internal/types"
-	"image/color"
 )
 
 // Modal 模态弹窗组件
 type Modal struct {
-	Type        types.ModalType // 弹窗类型
-	Title       string          // 弹窗标题
-	Message     string          // 提示消息（确认型）
-	Input       textinput.Model // 输入框（输入型）
-	HasInput    bool            // 是否有输入框
-	ScreenWidth int             // 屏幕宽度（用于居中）
-	ScreenHeight int            // 屏幕高度（用于居中）
-	Progress    *types.ProgressInfo // 进度信息（进度型）
-	Settings    *types.Settings     // 设置信息（设置型，临时状态）
-	SettingsIdx int                 // 设置项当前索引
+	Type         types.ModalType     // 弹窗类型
+	Title        string              // 弹窗标题
+	Message      string              // 提示消息（确认型）
+	Input        textinput.Model     // 输入框（输入型）
+	HasInput     bool                // 是否有输入框
+	ScreenWidth  int                 // 屏幕宽度（用于居中）
+	ScreenHeight int                 // 屏幕高度（用于居中）
+	Progress     *types.ProgressInfo // 进度信息（进度型）
+	Settings     *types.Settings     // 设置信息（设置型，临时状态）
+	SettingsIdx  int                 // 设置项当前索引
 }
 
 // NewModal 创建新的模态弹窗
@@ -95,9 +96,9 @@ func (m *Modal) ShowDelete(name string, count int) {
 	m.Title = "确认删除"
 	m.HasInput = false
 	if count > 1 {
-		m.Message = "确定要删除选中的 " + itoa(count) + " 个文件吗？\n此操作不可撤销！"
+		m.Message = "确定要删除选中的 " + itoa(count) + " 个文件吗？"
 	} else {
-		m.Message = "确定要删除 \"" + name + "\" 吗？\n此操作不可撤销！"
+		m.Message = "确定要删除 \"" + name + "\" 吗？"
 	}
 }
 

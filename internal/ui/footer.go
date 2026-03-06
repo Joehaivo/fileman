@@ -72,7 +72,7 @@ func (f *Footer) Render() string {
 			keyHint{"F4", "新建目录"},
 			keyHint{"F5", "新建文件"},
 			keyHint{"F6", "外部编辑"},
-			keyHint{"F7", "隐藏文件"},
+			keyHint{"F7", "切换隐藏"},
 			keyHint{"F8", "设置"},
 			keyHint{"F9", "退出"},
 			keyHint{"Del", "删除"},
