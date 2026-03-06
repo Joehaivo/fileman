@@ -13,7 +13,10 @@
       "Bash(/tmp/test_render.go:*)",
       "Bash(/tmp/test_width2.go:*)",
       "Bash(/tmp/test_full2.go:*)",
-      "Bash(/tmp/test_components.go:*)"
+      "Bash(/tmp/test_components.go:*)",
+      "Bash(/tmp/test_full_render.go:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs"
     ]
   },
   "sandbox": {

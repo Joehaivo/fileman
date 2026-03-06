@@ -343,11 +343,11 @@ func (p *Panel) renderEntryLine(entry types.FileEntry, isCursor bool) string {
 		nameWidth = 1
 	}
 
-	// 截断过长的文件名
+	// 截断过长的文件名（使用 lipgloss.Width 计算实际显示宽度）
 	name := entry.Name
-	if len([]rune(name)) > nameWidth {
-		runes := []rune(name)
-		name = string(runes[:nameWidth-1]) + "…"
+	displayWidth := lipgloss.Width(name)
+	if displayWidth > nameWidth {
+		name = truncateString(name, nameWidth-1) + "…"
 	}
 
 	// 格式化大小
@@ -433,4 +433,21 @@ func (p *Panel) getFileStyle(entry types.FileEntry) lipgloss.Style {
 	default:
 		return lipgloss.NewStyle().Foreground(ColorForeground)
 	}
+}
+
+// truncateString 截断字符串使其显示宽度不超过指定值
+func truncateString(s string, maxDisplayWidth int) string {
+	if maxDisplayWidth <= 0 {
+		return ""
+	}
+
+	currentWidth := 0
+	for i, r := range s {
+		charWidth := lipgloss.Width(string(r))
+		if currentWidth+charWidth > maxDisplayWidth {
+			return s[:i]
+		}
+		currentWidth += charWidth
+	}
+	return s
 }
