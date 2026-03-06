@@ -364,7 +364,31 @@ func (p *Panel) renderEntryLine(entry types.FileEntry, isCursor bool) string {
 		dateStr = fileops.FormatDate(entry.ModTime)
 	}
 
-	// 选择样式
+	// 光标行：用 CursorStyle 统一渲染，不使用内部样式
+	// 这样 CursorStyle 的背景色可以完整覆盖整行
+	if isCursor {
+		cursorStyle := DefaultTheme.CursorStyle
+		if !p.IsFocused {
+			cursorStyle = cursorStyle.Copy().Background(ColorBorderNormal).Foreground(ColorSubdued)
+		}
+
+		// 构建纯文本内容，由 cursorStyle 统一渲染
+		namePart := fmt.Sprintf("%-*s", nameWidth, name)
+		sizePart := fmt.Sprintf("%*s", sizeWidth, sizeStr)
+
+		var plainLine string
+		if p.ShowDate {
+			datePart := fmt.Sprintf("%*s", dateWidth, dateStr)
+			plainLine = fmt.Sprintf("%s %s %s", namePart, sizePart, datePart)
+		} else {
+			plainLine = fmt.Sprintf("%s %s", namePart, sizePart)
+		}
+
+		// CursorStyle 包含 Padding(0, 1)，背景色完整覆盖整行
+		return cursorStyle.Width(p.Width).Render(plainLine)
+	}
+
+	// 非光标行：使用各自的样式渲染
 	var nameStyle lipgloss.Style
 	switch {
 	case isSelected:
@@ -399,16 +423,6 @@ func (p *Panel) renderEntryLine(entry types.FileEntry, isCursor bool) string {
 		line = fmt.Sprintf("%s %s %s", namePart, sizePart, datePart)
 	} else {
 		line = fmt.Sprintf("%s %s", namePart, sizePart)
-	}
-
-	if isCursor {
-		style := DefaultTheme.CursorStyle
-		if !p.IsFocused {
-			// 未激活面板的光标颜色变淡
-			style = style.Copy().Background(ColorBorderNormal).Foreground(ColorSubdued)
-		}
-		// CursorStyle 包含 Padding(0, 1)
-		return style.Width(p.Width).Render(line)
 	}
 
 	return lipgloss.NewStyle().Width(p.Width).Render(line)

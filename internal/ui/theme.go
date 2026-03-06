@@ -45,26 +45,26 @@ type Theme struct {
 	BorderNormal lipgloss.Style
 
 	// 文字样式
-	TitleStyle      lipgloss.Style
-	SubduedStyle    lipgloss.Style
-	DirStyle        lipgloss.Style
-	SymlinkStyle    lipgloss.Style
-	ExecStyle       lipgloss.Style
-	ArchiveStyle    lipgloss.Style
-	ImageStyle      lipgloss.Style
-	SelectedStyle   lipgloss.Style
-	CursorStyle     lipgloss.Style
-	SizeStyle       lipgloss.Style
-	DateStyle       lipgloss.Style
-	InfoLabelStyle  lipgloss.Style
-	InfoValueStyle  lipgloss.Style
-	SearchStyle     lipgloss.Style
-	KeyHintStyle    lipgloss.Style
-	KeyHighlight    lipgloss.Style
-	ErrorStyle      lipgloss.Style
-	SuccessStyle    lipgloss.Style
-	SelectionStyle  lipgloss.Style
-	PreviewTitle    lipgloss.Style
+	TitleStyle     lipgloss.Style
+	SubduedStyle   lipgloss.Style
+	DirStyle       lipgloss.Style
+	SymlinkStyle   lipgloss.Style
+	ExecStyle      lipgloss.Style
+	ArchiveStyle   lipgloss.Style
+	ImageStyle     lipgloss.Style
+	SelectedStyle  lipgloss.Style
+	CursorStyle    lipgloss.Style
+	SizeStyle      lipgloss.Style
+	DateStyle      lipgloss.Style
+	InfoLabelStyle lipgloss.Style
+	InfoValueStyle lipgloss.Style
+	SearchStyle    lipgloss.Style
+	KeyHintStyle   lipgloss.Style
+	KeyHighlight   lipgloss.Style
+	ErrorStyle     lipgloss.Style
+	SuccessStyle   lipgloss.Style
+	SelectionStyle lipgloss.Style
+	PreviewTitle   lipgloss.Style
 }
 
 // DefaultTheme OpenCode 风格艳丽深色主题

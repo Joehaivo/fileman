@@ -16,7 +16,11 @@
       "Bash(/tmp/test_components.go:*)",
       "Bash(/tmp/test_full_render.go:*)",
       "mcp__context7__resolve-library-id",
-      "mcp__context7__query-docs"
+      "mcp__context7__query-docs",
+      "Bash(/tmp/test_lipgloss.go:*)",
+      "Bash(/tmp/test_lipgloss2.go:*)",
+      "Bash(/tmp/test_lipgloss3.go:*)",
+      "Bash(/tmp/test_fix.go:*)"
     ]
   },
   "sandbox": {
