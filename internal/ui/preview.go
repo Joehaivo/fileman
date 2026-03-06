@@ -141,8 +141,8 @@ func (pv *PreviewPane) EnterEdit() {
 	if !pv.IsEditable() {
 		return
 	}
-	// 通过发送 Home 将光标移到文本开头
-	pv.Editor, _ = pv.Editor.Update(tea.KeyPressMsg{Code: tea.KeyHome})
+	// 将光标移到文本开头
+	pv.Editor.MoveToBegin()
 	pv.Editor.Focus()
 }
 

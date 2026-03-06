@@ -22,8 +22,8 @@ go test -run TestReadPreview_Chinese ./internal/fileops/
 ```
 
 ## 架构
-
-FileMan 是一个终端文件管理器（TUI），基于 Bubble Tea 框架构建，采用 Elm 架构（Model-Update-View 模式）。
+得到的asd asda sd
+FileMan 是一个终端文件管理器（TUI），基于 Bubble Tea 框架构建，采用 Elm 架构（Model-Update-View 模式）
 
 ### 核心模式
 
