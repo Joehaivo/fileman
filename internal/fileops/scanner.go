@@ -14,7 +14,8 @@ import (
 
 // ScanDir 扫描目录，返回排序后的文件条目列表（目录优先，按名称排序）
 // path: 要扫描的目录路径
-func ScanDir(path string) ([]types.FileEntry, error) {
+// showHidden: 是否显示隐藏文件（以 . 开头的文件）
+func ScanDir(path string, showHidden bool) ([]types.FileEntry, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return nil, fmt.Errorf("获取绝对路径失败: %w", err)
@@ -27,6 +28,13 @@ func ScanDir(path string) ([]types.FileEntry, error) {
 
 	var files []types.FileEntry
 	for _, entry := range entries {
+		name := entry.Name()
+
+		// 过滤隐藏文件（以 . 开头的文件）
+		if !showHidden && strings.HasPrefix(name, ".") {
+			continue
+		}
+
 		info, err := entry.Info()
 		if err != nil {
 			continue

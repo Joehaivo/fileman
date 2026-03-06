@@ -135,8 +135,9 @@ func (m Model) Init() tea.Cmd {
 // loadPanel 加载面板目录内容的命令
 func (m *Model) loadPanel(p *ui.Panel) tea.Cmd {
 	path := p.Path
+	showHidden := m.settings.ShowHidden
 	return func() tea.Msg {
-		entries, err := fileops.ScanDir(path)
+		entries, err := fileops.ScanDir(path, showHidden)
 		if err != nil {
 			return panelLoadMsg{panel: p, err: err}
 		}

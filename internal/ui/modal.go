@@ -61,6 +61,18 @@ func (m *Modal) ShowNewDir() {
 	m.Input.Focus()
 }
 
+// ShowNewFile 显示新建文件弹窗
+func (m *Modal) ShowNewFile() {
+	m.Type = types.ModalNewFile
+	m.Title = "新建文件"
+	m.Message = "请输入文件名称："
+	m.HasInput = true
+	m.Input.Reset()
+	m.Input.SetValue("")
+	m.Input.Placeholder = "文件名称"
+	m.Input.Focus()
+}
+
 // ShowRename 显示重命名弹窗
 // currentName: 当前文件名（预填）
 func (m *Modal) ShowRename(currentName string) {
@@ -299,28 +311,42 @@ func (m *Modal) renderSettingsList(width int) string {
 	var sb strings.Builder
 
 	// 设置项1：展示修改时间
-	label := "展示修改时间"
-	status := "[ ] "
+	label1 := "展示修改时间"
+	status1 := "[ ] "
 	if m.Settings.ShowDate {
-		status = "[x] "
+		status1 = "[x] "
 	}
-	
-	style := lipgloss.NewStyle().Foreground(ColorForeground)
-	cursor := "  "
-	
-	// 当前仅有 1 个设置项，所以 idx 0 总是选中
-	if m.SettingsIdx == 0 {
-		style = lipgloss.NewStyle().Foreground(ColorSelected).Bold(true)
-		cursor = "> "
-	}
-	
-	line := style.Render(cursor + status + label)
-	sb.WriteString(line)
-	// sb.WriteByte('\n') // 只有一项时不需要换行，Render 中已经添加了额外的空行
 
-	// 后续添加更多设置项时：
-	// if m.SettingsIdx == 1 { ... }
-	
+	style1 := lipgloss.NewStyle().Foreground(ColorForeground)
+	cursor1 := "  "
+
+	if m.SettingsIdx == 0 {
+		style1 = lipgloss.NewStyle().Foreground(ColorSelected).Bold(true)
+		cursor1 = "> "
+	}
+
+	line1 := style1.Render(cursor1 + status1 + label1)
+	sb.WriteString(line1)
+	sb.WriteByte('\n')
+
+	// 设置项2：显示隐藏文件
+	label2 := "显示隐藏文件"
+	status2 := "[ ] "
+	if m.Settings.ShowHidden {
+		status2 = "[x] "
+	}
+
+	style2 := lipgloss.NewStyle().Foreground(ColorForeground)
+	cursor2 := "  "
+
+	if m.SettingsIdx == 1 {
+		style2 = lipgloss.NewStyle().Foreground(ColorSelected).Bold(true)
+		cursor2 = "> "
+	}
+
+	line2 := style2.Render(cursor2 + status2 + label2)
+	sb.WriteString(line2)
+
 	return sb.String()
 }
 

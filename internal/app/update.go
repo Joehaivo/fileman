@@ -89,7 +89,7 @@ func (m Model) handleModalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.modal.Hide()
 		}
 
-	case types.ModalNewDir, types.ModalRename:
+	case types.ModalNewDir, types.ModalNewFile, types.ModalRename:
 		if isEnter(msg) {
 			return m.executeInputModal()
 		}
@@ -111,19 +111,34 @@ func (m Model) handleModalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.panelB.ShowDate = m.settings.ShowDate
 			}
 			m.modal.Hide()
-			return m, nil
+			// 如果显示隐藏文件的设置改变了，需要重新加载面板
+			return m, tea.Batch(
+				m.loadPanel(m.panelA),
+				m.loadPanel(m.panelB),
+			)
 		}
 		if isEscape(msg) {
 			m.modal.Hide()
 			return m, nil
 		}
-		
+
 		switch msg.String() {
-		case "up", "down":
-			// 目前只有一个设置项，不需要移动
+		case "up":
+			if m.modal.SettingsIdx > 0 {
+				m.modal.SettingsIdx--
+			}
+		case "down":
+			if m.modal.SettingsIdx < 1 { // 共 2 个设置项，索引 0-1
+				m.modal.SettingsIdx++
+			}
 		case " ":
 			if m.modal.Settings != nil {
-				m.modal.Settings.ShowDate = !m.modal.Settings.ShowDate
+				switch m.modal.SettingsIdx {
+				case 0:
+					m.modal.Settings.ShowDate = !m.modal.Settings.ShowDate
+				case 1:
+					m.modal.Settings.ShowHidden = !m.modal.Settings.ShowHidden
+				}
 			}
 		}
 		return m, nil
@@ -300,22 +315,17 @@ func (m Model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	if isSelectAll(msg) {
-		m.activePanel().SelectAll()
-		m.selectionTotalSize = m.computeSelectionSize()
-		return m, nil
-	}
-
-	if isDelete(msg) {
-		return m.showDeleteConfirm()
-	}
-
 	if isRename(msg) {
 		return m.showRenameModal()
 	}
 
 	if isNewDir(msg) {
 		m.modal.ShowNewDir()
+		return m, nil
+	}
+
+	if isNewFile(msg) {
+		m.modal.ShowNewFile()
 		return m, nil
 	}
 
@@ -334,6 +344,19 @@ func (m Model) handleNormalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	if isSettings(msg) {
 		m.modal.ShowSettings(m.settings)
 		return m, nil
+	}
+
+	if isToggleHidden(msg) {
+		m.settings.ShowHidden = !m.settings.ShowHidden
+		// 重新加载两个面板
+		return m, tea.Batch(
+			m.loadPanel(m.panelA),
+			m.loadPanel(m.panelB),
+		)
+	}
+
+	if isDelete(msg) {
+		return m.showDeleteConfirm()
 	}
 
 	return m, nil
@@ -507,6 +530,10 @@ func (m Model) executeInputModal() (tea.Model, tea.Cmd) {
 		switch modalType {
 		case types.ModalNewDir:
 			if err := fileops.CreateDir(panel.Path, value); err != nil {
+				return fileOpMsg{err: err}
+			}
+		case types.ModalNewFile:
+			if err := fileops.CreateFile(panel.Path, value); err != nil {
 				return fileOpMsg{err: err}
 			}
 		case types.ModalRename:

@@ -157,6 +157,18 @@ func CreateDir(parentPath, name string) error {
 	return nil
 }
 
+// CreateFile 创建空文件
+// parentPath: 父目录路径, name: 新文件名
+func CreateFile(parentPath, name string) error {
+	newPath := filepath.Join(parentPath, name)
+	file, err := os.OpenFile(newPath, os.O_RDONLY|os.O_CREATE|os.O_EXCL, 0644)
+	if err != nil {
+		return fmt.Errorf("创建文件失败: %w", err)
+	}
+	file.Close()
+	return nil
+}
+
 // GetDirSize 计算目录总大小（递归）
 func GetDirSize(path string) (int64, error) {
 	var total int64

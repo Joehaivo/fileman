@@ -79,6 +79,7 @@ type ModalType int
 const (
 	ModalNone     ModalType = iota // 无弹窗
 	ModalNewDir                    // 新建目录
+	ModalNewFile                   // 新建文件
 	ModalRename                    // 重命名
 	ModalDelete                    // 删除确认
 	ModalProgress                  // 复制/移动进度
@@ -88,7 +89,8 @@ const (
 
 // Settings 应用设置
 type Settings struct {
-	ShowDate bool // 是否显示修改时间
+	ShowDate   bool // 是否显示修改时间
+	ShowHidden bool // 是否显示隐藏文件
 }
 
 // ProgressInfo 复制/移动进度信息

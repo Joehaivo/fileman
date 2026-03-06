@@ -7,7 +7,7 @@ import "github.com/charmbracelet/bubbletea"
 
 // isQuit 检查是否为退出键
 func isQuit(msg tea.KeyMsg) bool {
-	return msg.String() == "f10"
+	return msg.String() == "f9"
 }
 
 // isUp 检查是否为向上移动键
@@ -32,14 +32,12 @@ func isPageDown(msg tea.KeyMsg) bool {
 
 // isHome 检查是否为移至顶部键
 func isHome(msg tea.KeyMsg) bool {
-	k := msg.String()
-	return k == "home" || k == "f11"
+	return msg.String() == "home"
 }
 
 // isEnd 检查是否为移至底部键
 func isEnd(msg tea.KeyMsg) bool {
-	k := msg.String()
-	return k == "end" || k == "f12"
+	return msg.String() == "end"
 }
 
 // isEnter 检查是否为确认键
@@ -64,42 +62,42 @@ func isSpace(msg tea.KeyMsg) bool {
 
 // isSearch 检查是否为搜索键
 func isSearch(msg tea.KeyMsg) bool {
-	return msg.String() == "f3"
+	return msg.String() == "/"
 }
 
 // isDelete 检查是否为删除键
 func isDelete(msg tea.KeyMsg) bool {
+	return msg.String() == "delete"
+}
+
+// isRename 检查是否为重命名键（F1）
+func isRename(msg tea.KeyMsg) bool {
 	return msg.String() == "f1"
 }
 
 // isNewDir 检查是否为新建目录键
 func isNewDir(msg tea.KeyMsg) bool {
-	return msg.String() == "f7"
+	return msg.String() == "f4"
 }
 
-// isRename 检查是否为重命名键（F2）
-func isRename(msg tea.KeyMsg) bool {
-	return msg.String() == "f2"
-}
-
-// isCopy 检查是否为复制键（F5）
-func isCopy(msg tea.KeyMsg) bool {
+// isNewFile 检查是否为新建文件键（F5）
+func isNewFile(msg tea.KeyMsg) bool {
 	return msg.String() == "f5"
 }
 
-// isMove 检查是否为移动键（F6）
+// isCopy 检查是否为复制键（F2）
+func isCopy(msg tea.KeyMsg) bool {
+	return msg.String() == "f2"
+}
+
+// isMove 检查是否为移动键（F3）
 func isMove(msg tea.KeyMsg) bool {
-	return msg.String() == "f6"
+	return msg.String() == "f3"
 }
 
 // isEdit 检查是否为编辑键
 func isEdit(msg tea.KeyMsg) bool {
-	return msg.String() == "f4"
-}
-
-// isSelectAll 检查是否为全选键
-func isSelectAll(msg tea.KeyMsg) bool {
-	return msg.String() == "f9"
+	return msg.String() == "f6"
 }
 
 // isSettings 检查是否为设置键
@@ -127,12 +125,17 @@ func isRight(msg tea.KeyMsg) bool {
 	return msg.String() == "right"
 }
 
-// isSave 检查是否为保存键（F3）
+// isSave 检查是否为保存键（Ctrl+S）
 func isSave(msg tea.KeyMsg) bool {
-	return msg.String() == "f3"
+	return msg.String() == "ctrl+s"
 }
 
-// isExitEdit 检查是否为退出编辑键（F4）
+// isExitEdit 检查是否为退出编辑键（Esc）
 func isExitEdit(msg tea.KeyMsg) bool {
-	return msg.String() == "f4"
+	return msg.String() == "esc"
+}
+
+// isToggleHidden 检查是否为切换隐藏文件键（F7）
+func isToggleHidden(msg tea.KeyMsg) bool {
+	return msg.String() == "f7"
 }
