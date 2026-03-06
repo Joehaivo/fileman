@@ -13,8 +13,6 @@ import (
 const (
 	// 面板最小宽度
 	panelMinWidth = 20
-	// 图标宽度（含空格）
-	iconWidth = 2
 	// 大小列宽度
 	sizeWidth = 6
 	// 日期列宽度
@@ -324,7 +322,6 @@ func (p *Panel) renderLine(idx int, entries []types.FileEntry) string {
 
 // renderEntryLine 渲染文件条目行
 func (p *Panel) renderEntryLine(entry types.FileEntry, isCursor bool) string {
-	icon := fileops.GetFileIcon(entry.Name, entry.IsDir)
 	isSelected := p.Selection.Has(entry.Path)
 
 	// 布局计算：
@@ -335,11 +332,10 @@ func (p *Panel) renderEntryLine(entry types.FileEntry, isCursor bool) string {
 	}
 
 	// 计算固定部分宽度：
-	// Icon(2) + Name(Flex) + Space(1) + Size(6) [+ Space(1) + Date(11)]
-	// 注意：Icon 和 Name 之间在 Sprintf 中无空格
-	fixedWidth := iconWidth + 1 + sizeWidth // 2 + 1 + 6 = 9
+	// Name(Flex) + Space(1) + Size(6) [+ Space(1) + Date(11)]
+	fixedWidth := 1 + sizeWidth // 1 + 6 = 7
 	if p.ShowDate {
-		fixedWidth += 1 + dateWidth // + 1 + 11 = 12 -> Total 21
+		fixedWidth += 1 + dateWidth // + 1 + 11 = 12 -> Total 19
 	}
 
 	nameWidth := contentWidth - fixedWidth
@@ -387,7 +383,6 @@ func (p *Panel) renderEntryLine(entry types.FileEntry, isCursor bool) string {
 		nameStyle = nameStyle.Copy().Foreground(ColorSubdued)
 	}
 
-	iconPart := lipgloss.NewStyle().Width(iconWidth).Render(icon)
 	namePart := nameStyle.Width(nameWidth).Render(name)
 	sizeStyle := DefaultTheme.SizeStyle
 	dateStyle := DefaultTheme.DateStyle
@@ -401,9 +396,9 @@ func (p *Panel) renderEntryLine(entry types.FileEntry, isCursor bool) string {
 	var line string
 	if p.ShowDate {
 		datePart := dateStyle.Width(dateWidth).Align(lipgloss.Right).Render(dateStr)
-		line = fmt.Sprintf("%s%s %s %s", iconPart, namePart, sizePart, datePart)
+		line = fmt.Sprintf("%s %s %s", namePart, sizePart, datePart)
 	} else {
-		line = fmt.Sprintf("%s%s %s", iconPart, namePart, sizePart)
+		line = fmt.Sprintf("%s %s", namePart, sizePart)
 	}
 
 	if isCursor {

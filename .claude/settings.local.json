@@ -6,5 +6,9 @@
       "Bash(timeout 2 ./fileman:*)",
       "Bash(go:*)"
     ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
   }
 }
