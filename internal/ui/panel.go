@@ -373,12 +373,13 @@ func (p *Panel) renderEntryLine(entry types.FileEntry, isCursor bool) string {
 		}
 
 		// 构建纯文本内容，由 cursorStyle 统一渲染
-		namePart := fmt.Sprintf("%-*s", nameWidth, name)
-		sizePart := fmt.Sprintf("%*s", sizeWidth, sizeStr)
+		// 使用 padString 正确处理多字节字符（如中文）的显示宽度
+		namePart := padStringRight(name, nameWidth)
+		sizePart := padStringLeft(sizeStr, sizeWidth)
 
 		var plainLine string
 		if p.ShowDate {
-			datePart := fmt.Sprintf("%*s", dateWidth, dateStr)
+			datePart := padStringLeft(dateStr, dateWidth)
 			plainLine = fmt.Sprintf("%s %s %s", namePart, sizePart, datePart)
 		} else {
 			plainLine = fmt.Sprintf("%s %s", namePart, sizePart)
@@ -464,4 +465,23 @@ func truncateString(s string, maxDisplayWidth int) string {
 		currentWidth += charWidth
 	}
 	return s
+}
+
+// padStringRight 将字符串填充到指定显示宽度（右填充空格）
+// 用于正确处理包含多字节字符（如中文）的字符串
+func padStringRight(s string, displayWidth int) string {
+	actualWidth := lipgloss.Width(s)
+	if actualWidth >= displayWidth {
+		return s
+	}
+	return s + strings.Repeat(" ", displayWidth-actualWidth)
+}
+
+// padStringLeft 将字符串填充到指定显示宽度（左填充空格）
+func padStringLeft(s string, displayWidth int) string {
+	actualWidth := lipgloss.Width(s)
+	if actualWidth >= displayWidth {
+		return s
+	}
+	return strings.Repeat(" ", displayWidth-actualWidth) + s
 }

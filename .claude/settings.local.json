@@ -20,7 +20,8 @@
       "Bash(/tmp/test_lipgloss.go:*)",
       "Bash(/tmp/test_lipgloss2.go:*)",
       "Bash(/tmp/test_lipgloss3.go:*)",
-      "Bash(/tmp/test_fix.go:*)"
+      "Bash(/tmp/test_fix.go:*)",
+      "Bash(/tmp/test_chinese.go:*)"
     ]
   },
   "sandbox": {
