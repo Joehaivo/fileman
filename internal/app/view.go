@@ -47,8 +47,9 @@ func (m Model) renderFrame() string {
 		borderColor = ui.ColorBorderFocus
 	}
 
-	// 计算内部宽度（去掉左右边框各1列和左右padding各1列，再减去1列以防止右侧边框溢出）
-	// Padding 在 Border 内部，所以内容宽度 = width - border(2) - padding(2) - offset(2)
+	// 计算内部宽度
+	// lipgloss v2 中 Width 包含 Border 和 Padding
+	// 内容区域宽度 = Width - border(2) - padding(2) = (m.width - 2) - 4 = m.width - 6
 	innerWidth := m.width - 6
 
 	// --- Header 行 ---
@@ -76,16 +77,16 @@ func (m Model) renderFrame() string {
 	sb.WriteString(footerContent)
 
 	// 包裹外框边框，增加 padding 使内容与边框有间距
-	// lipgloss的Border占用2列，Padding占用2列，MarginRight占用1列
-	// 总宽度 = Width(设置值) + Border(2) + Margin(1)
-	// 我们希望总宽度 <= m.width - 1 (留出安全距离)
-	// 所以 Width = (m.width - 1) - 2 - 1 = m.width - 4
+	// lipgloss v2 中 Width 包含 Border 和 Padding，Margin 在 Width 之外额外添加
+	// 总宽度 = Width + MarginRight(1)
+	// 我们希望总宽度 = m.width - 1 (留出安全距离)
+	// 所以 Width = m.width - 2
 	outerStyle := lipgloss.NewStyle().
 		Border(border).
 		BorderForeground(borderColor).
-		Padding(1, 1). // 上下左右各1个字符的间距
-		MarginRight(1). // 右侧留出1个字符的 margin
-		Width(m.width - 4) // 设置内容+padding的宽度
+		Padding(1, 1).     // 上下左右各1个字符的间距
+		MarginRight(1).    // 右侧留出1个字符的 margin
+		Width(m.width - 2) // Width 包含 border 和 padding
 
 	return outerStyle.Render(sb.String())
 }

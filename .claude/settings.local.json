@@ -9,7 +9,11 @@
       "WebFetch(domain:goproxy.cn)",
       "WebFetch(domain:proxy.golang.org)",
       "WebFetch(domain:charm.land)",
-      "WebFetch(domain:golang.org)"
+      "WebFetch(domain:golang.org)",
+      "Bash(/tmp/test_render.go:*)",
+      "Bash(/tmp/test_width2.go:*)",
+      "Bash(/tmp/test_full2.go:*)",
+      "Bash(/tmp/test_components.go:*)"
     ]
   },
   "sandbox": {

@@ -213,11 +213,11 @@ func (m *Model) calcSizes() {
 	}
 	contentHeight := m.contentHeight
 
-	// 计算可用内容宽度（去掉边框和padding）
-	// 外框总宽度 = m.width，边框左右各1列，padding左右各1列
-	// 另外再减去1列（右侧 margin），确保右侧边框完整显示
-	// MarginRight(1) 在 View 中通过 Width(m.width - 1) 实现
-	contentWidth := m.width - 6 // -2 border, -2 padding, -2 margin (为了保险起见，预留更多空间)
+	// 计算可用内容宽度
+	// lipgloss v2 中 Width 包含 Border 和 Padding，Margin 在 Width 之外
+	// 外框 Width = m.width - 2，Border(2) + Padding(2) 在 Width 内
+	// 内容区域 = Width - Border - Padding = m.width - 2 - 4 = m.width - 6
+	contentWidth := m.width - 6
 
 	// 左栏宽度（40%），右栏宽度（60%）
 	// 布局：leftWidth + 垂直分隔(1) + rightWidth = contentWidth

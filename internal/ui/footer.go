@@ -109,13 +109,16 @@ func (f *Footer) layoutKeys(hints []keyHint) (string, string) {
 			line1Parts = append(line1Parts, part)
 			line1Width += neededWidth
 		} else {
-			// 放到第二行
+			// 尝试放到第二行
 			neededWidth2 := partWidth
 			if len(line2Parts) > 0 {
 				neededWidth2 += sepWidth
 			}
-			line2Parts = append(line2Parts, part)
-			line2Width += neededWidth2
+			// 只有第二行也放得下才添加
+			if line2Width+neededWidth2 <= f.Width {
+				line2Parts = append(line2Parts, part)
+				line2Width += neededWidth2
+			}
 		}
 	}
 
