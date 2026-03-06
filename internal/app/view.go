@@ -138,12 +138,11 @@ func (m Model) renderContent() string {
 
 	var sb strings.Builder
 	borderColor := ui.ColorBorderNormal
+	sep := lipgloss.NewStyle().Foreground(borderColor).Render("│")
 
 	for i := 0; i < fixedHeight; i++ {
 		leftLine := leftLines[i]
 		rightLine := rightLines[i]
-		// 中间垂直分隔符
-		sep := lipgloss.NewStyle().Foreground(borderColor).Render("│")
 		sb.WriteString(leftLine)
 		sb.WriteString(sep)
 		sb.WriteString(rightLine)

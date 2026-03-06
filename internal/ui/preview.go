@@ -220,13 +220,14 @@ func (pv *PreviewPane) renderEmpty() string {
 // renderTitle 渲染标题行（文件名）
 func (pv *PreviewPane) renderTitle() string {
 	name := pv.Entry.Name
-	if len(name) > pv.Width-2 {
+	if len(name) > pv.Width-3 { // -3: 左边距1 + 右边距2
 		runes := []rune(name)
-		if len(runes) > pv.Width-2 {
-			name = string(runes[:pv.Width-3]) + "…"
+		if len(runes) > pv.Width-3 {
+			name = string(runes[:pv.Width-4]) + "…"
 		}
 	}
-	return DefaultTheme.PreviewTitle.Width(pv.Width).Render(name)
+	// 左边添加一个空格，使文件名不紧贴边缘
+	return " " + DefaultTheme.PreviewTitle.Width(pv.Width-1).Render(name)
 }
 
 // renderInfo 渲染文件信息区（5行）
