@@ -21,7 +21,9 @@
       "Bash(/tmp/test_lipgloss2.go:*)",
       "Bash(/tmp/test_lipgloss3.go:*)",
       "Bash(/tmp/test_fix.go:*)",
-      "Bash(/tmp/test_chinese.go:*)"
+      "Bash(/tmp/test_chinese.go:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch"
     ]
   },
   "sandbox": {

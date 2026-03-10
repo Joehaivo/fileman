@@ -101,3 +101,19 @@ type ProgressInfo struct {
 	FileName  string  // 当前处理文件名
 	IsFinish  bool    // 是否完成
 }
+
+// FileOpResult 单个文件操作结果
+type FileOpResult struct {
+	SrcPath string
+	DstPath string
+	Err     error
+}
+
+// FloatingProgress 悬浮进度窗口状态
+type FloatingProgress struct {
+	OpType     string         // "复制" 或 "移动"
+	Total      int            // 总文件数
+	Done       int            // 已完成数
+	Results    []FileOpResult // 操作结果列表
+	IsComplete bool           // 是否完成
+}

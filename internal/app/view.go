@@ -30,6 +30,11 @@ func (m Model) View() tea.View {
 		} else {
 			content = frame
 		}
+
+		// 如果有 Toast，叠加在右上角
+		if m.toastMessage != "" {
+			content = ui.OverlayTopRight(content, ui.RenderSuccessToast(m.toastMessage, m.width/3), m.width)
+		}
 	}
 
 	// 创建 tea.View 并设置 AltScreen 和 MouseMode
@@ -190,5 +195,13 @@ func (m Model) renderPanel(p *ui.Panel) string {
 
 // renderRightColumn 渲染右栏（预览区）
 func (m Model) renderRightColumn() string {
-	return m.preview.Render()
+	preview := m.preview.Render()
+
+	// 如果有悬浮进度窗口，叠加在预览窗口右上角
+	if m.floatingProgress != nil {
+		fp := ui.RenderFloatingProgress(m.floatingProgress, m.preview.Width/2, m.contentHeight)
+		return ui.OverlayTopRight(preview, fp, m.preview.Width)
+	}
+
+	return preview
 }

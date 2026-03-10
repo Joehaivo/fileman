@@ -42,8 +42,10 @@ func (f *Footer) Render() string {
 		// 编辑模式
 		hints = []keyHint{
 			{"↑↓←→", "移动光标"},
-			{"Ctrl+S", "保存"},
-			{"Esc", "退出"},
+			{"F1", "保存"},
+			{"F2", "退出"},
+			{"Home/End", "首/尾"},
+			{"PgUp/PgDn", "翻页"},
 		}
 	} else if f.IsSearching {
 		// 搜索模式

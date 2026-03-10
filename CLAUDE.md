@@ -1,7 +1,6 @@
 # CLAUDE.md
 
-本文件为 Claude Code (claude.ai/code) 在此代码库中工作时提供指导。
-
+本文件为 Claude Code (claude.ai/code)
 ## 构建与测试命令
 
 ```bash

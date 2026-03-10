@@ -126,14 +126,14 @@ func isRight(msg tea.KeyPressMsg) bool {
 	return msg.String() == "right"
 }
 
-// isSave 检查是否为保存键（Ctrl+S）
+// isSave 检查是否为保存键（F1）
 func isSave(msg tea.KeyPressMsg) bool {
-	return msg.String() == "ctrl+s"
+	return msg.String() == "f1"
 }
 
-// isExitEdit 检查是否为退出编辑键（Esc）
+// isExitEdit 检查是否为退出编辑键（F2）
 func isExitEdit(msg tea.KeyPressMsg) bool {
-	return msg.String() == "esc"
+	return msg.String() == "f2"
 }
 
 // isToggleHidden 检查是否为切换隐藏文件键（F7）

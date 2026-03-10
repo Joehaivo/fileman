@@ -31,6 +31,20 @@ type fileOpMsg struct {
 	err error
 }
 
+// toastMsg Toast 自动消失消息
+type toastMsg struct{}
+
+// fileOpResultMsg 文件操作结果消息（用于单文件和多文件操作）
+type fileOpResultMsg struct {
+	opType       string                // "copy" 或 "move"
+	srcPath      string                // 单文件操作的源路径
+	dstPath      string                // 单文件操作的目标路径
+	err          error                 // 单文件操作的错误
+	totalCount   int                   // 总文件数（多文件操作）
+	successCount int                   // 成功数（多文件操作）
+	results      []types.FileOpResult  // 多文件操作的结果列表
+}
+
 // progressMsg 进度更新消息
 type progressMsg struct {
 	info types.ProgressInfo
@@ -75,6 +89,12 @@ type Model struct {
 	// 待处理的复制/移动目标路径
 	pendingOpSrc []string
 	pendingOpDst string
+
+	// Toast 消息
+	toastMessage string
+
+	// 悬浮进度窗口
+	floatingProgress *types.FloatingProgress
 
 	// 初始命令（Init 执行后清空）
 	initCmd tea.Cmd

@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/haivo/fileman/internal/fileops"
@@ -50,6 +51,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case toastMsg:
+		// Toast 自动消失
+		m.toastMessage = ""
+		return m, nil
+
+	case fileOpResultMsg:
+		return m.handleFileOpResult(msg)
+
 	case tea.KeyPressMsg:
 		return m.handleKey(msg)
 	}
@@ -59,6 +68,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // handleKey 处理键盘事件，根据当前状态分发
 func (m Model) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	// 悬浮进度窗口完成后的按键处理
+	if m.floatingProgress != nil && m.floatingProgress.IsComplete {
+		if isEscape(msg) || isEnter(msg) {
+			m.floatingProgress = nil
+			m.selection.Clear()
+			return m, tea.Batch(
+				m.loadPanel(m.panelA),
+				m.loadPanel(m.panelB),
+			)
+		}
+		return m, nil
+	}
+
 	// 弹窗模式下的按键处理
 	if m.modal.IsVisible() {
 		return m.handleModalKey(msg)
@@ -225,12 +247,12 @@ func (m *Model) applySearch() {
 
 // handleEditKey 处理编辑模式下的按键
 func (m Model) handleEditKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	// F3 保存并退出
+	// F1 保存并退出
 	if isSave(msg) {
 		return m.saveEdit()
 	}
 
-	// F4 放弃更改并退出
+	// F2 放弃更改并退出
 	if isExitEdit(msg) {
 		return m.cancelEdit()
 	}
@@ -557,26 +579,76 @@ func (m Model) startCopyOperation() (tea.Model, tea.Cmd) {
 	}
 
 	dstDir := m.otherPanelPath()
-	progressInfo := &types.ProgressInfo{}
-	m.modal.ShowProgress("正在复制...", progressInfo)
+
+	// 单文件操作：使用 Toast 显示结果
+	if len(entries) == 1 {
+		return m.startSingleFileCopy(entries[0], dstDir)
+	}
+
+	// 多文件操作：使用悬浮进度窗口
+	m.floatingProgress = &types.FloatingProgress{
+		OpType: "复制",
+		Total:  len(entries),
+		Done:   0,
+	}
+
+	return m, m.executeMultiFileCopy(entries, dstDir)
+}
+
+// startSingleFileCopy 开始单文件复制操作
+func (m Model) startSingleFileCopy(entry types.FileEntry, dstDir string) (tea.Model, tea.Cmd) {
+	dst := filepath.Join(dstDir, entry.Name)
 
 	return m, func() tea.Msg {
-		for _, e := range entries {
-			dst := filepath.Join(dstDir, e.Name)
-			if e.IsDir {
-				if err := fileops.CopyDir(e.Path, dst, func(done, total int64) {
-					pct := float64(done) / float64(total)
-					_ = pct // 简化：不实时更新进度
-				}); err != nil {
-					return fileOpMsg{err: err}
-				}
+		var err error
+		if entry.IsDir {
+			err = fileops.CopyDir(entry.Path, dst, nil)
+		} else {
+			err = fileops.CopyFileProgress(entry.Path, dst, nil)
+		}
+
+		return fileOpResultMsg{
+			opType:  "copy",
+			srcPath: entry.Path,
+			dstPath: dst,
+			err:     err,
+		}
+	}
+}
+
+// executeMultiFileCopy 执行多文件复制操作
+func (m *Model) executeMultiFileCopy(entries []types.FileEntry, dstDir string) tea.Cmd {
+	return func() tea.Msg {
+		results := make([]types.FileOpResult, 0, len(entries))
+		successCount := 0
+
+		for _, entry := range entries {
+			dst := filepath.Join(dstDir, entry.Name)
+			var err error
+			if entry.IsDir {
+				err = fileops.CopyDir(entry.Path, dst, nil)
 			} else {
-				if err := fileops.CopyFileProgress(e.Path, dst, nil); err != nil {
-					return fileOpMsg{err: err}
-				}
+				err = fileops.CopyFileProgress(entry.Path, dst, nil)
+			}
+
+			result := types.FileOpResult{
+				SrcPath: entry.Path,
+				DstPath: dst,
+				Err:     err,
+			}
+			results = append(results, result)
+
+			if err == nil {
+				successCount++
 			}
 		}
-		return fileOpMsg{}
+
+		return fileOpResultMsg{
+			opType:       "copy",
+			totalCount:   len(entries),
+			successCount: successCount,
+			results:      results,
+		}
 	}
 }
 
@@ -588,18 +660,107 @@ func (m Model) startMoveOperation() (tea.Model, tea.Cmd) {
 	}
 
 	dstDir := m.otherPanelPath()
-	progressInfo := &types.ProgressInfo{}
-	m.modal.ShowProgress("正在移动...", progressInfo)
+
+	// 单文件操作：使用 Toast 显示结果
+	if len(entries) == 1 {
+		return m.startSingleFileMove(entries[0], dstDir)
+	}
+
+	// 多文件操作：使用悬浮进度窗口
+	m.floatingProgress = &types.FloatingProgress{
+		OpType: "移动",
+		Total:  len(entries),
+		Done:   0,
+	}
+
+	return m, m.executeMultiFileMove(entries, dstDir)
+}
+
+// startSingleFileMove 开始单文件移动操作
+func (m Model) startSingleFileMove(entry types.FileEntry, dstDir string) (tea.Model, tea.Cmd) {
+	dst := filepath.Join(dstDir, entry.Name)
 
 	return m, func() tea.Msg {
-		for _, e := range entries {
-			dst := filepath.Join(dstDir, e.Name)
-			if err := fileops.MoveEntry(e.Path, dst); err != nil {
-				return fileOpMsg{err: err}
+		err := fileops.MoveEntry(entry.Path, dst)
+
+		return fileOpResultMsg{
+			opType:  "move",
+			srcPath: entry.Path,
+			dstPath: dst,
+			err:     err,
+		}
+	}
+}
+
+// executeMultiFileMove 执行多文件移动操作
+func (m *Model) executeMultiFileMove(entries []types.FileEntry, dstDir string) tea.Cmd {
+	return func() tea.Msg {
+		results := make([]types.FileOpResult, 0, len(entries))
+		successCount := 0
+
+		for _, entry := range entries {
+			dst := filepath.Join(dstDir, entry.Name)
+			err := fileops.MoveEntry(entry.Path, dst)
+
+			result := types.FileOpResult{
+				SrcPath: entry.Path,
+				DstPath: dst,
+				Err:     err,
+			}
+			results = append(results, result)
+
+			if err == nil {
+				successCount++
 			}
 		}
-		return fileOpMsg{}
+
+		return fileOpResultMsg{
+			opType:       "move",
+			totalCount:   len(entries),
+			successCount: successCount,
+			results:      results,
+		}
 	}
+}
+
+// handleFileOpResult 处理文件操作结果消息
+func (m Model) handleFileOpResult(msg fileOpResultMsg) (tea.Model, tea.Cmd) {
+	// 多文件操作完成
+	if msg.totalCount > 0 {
+		if m.floatingProgress != nil {
+			m.floatingProgress.Done = msg.successCount
+			m.floatingProgress.Results = msg.results
+			m.floatingProgress.IsComplete = true
+		}
+		// 刷新两个面板
+		return m, tea.Batch(
+			m.loadPanel(m.panelA),
+			m.loadPanel(m.panelB),
+		)
+	}
+
+	// 单文件操作完成
+	if msg.err != nil {
+		m.modal.ShowError(msg.err.Error())
+		return m, nil
+	}
+
+	// 单文件操作成功，显示 Toast
+	opName := "复制"
+	if msg.opType == "move" {
+		opName = "移动"
+	}
+	filename := filepath.Base(msg.srcPath)
+	m.toastMessage = opName + "完成: " + filename
+
+	// 刷新两个面板并启动 2 秒定时器自动消失
+	return m, tea.Batch(
+		m.loadPanel(m.panelA),
+		m.loadPanel(m.panelB),
+		tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
+			return toastMsg{}
+		}),
+	)
 }
 
 // openInEditor 在编辑器中打开文件（Ctrl+E）

@@ -1,7 +1,7 @@
 # FileMan TUI 开发进度追踪
 
 ## 项目信息
-
+ddddasd收拾收拾
 - **二进制名**: `fm`
 - **模块路径**: `github.com/haivo/fileman`
 - **Go 版本**: 1.22+
