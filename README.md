@@ -5,6 +5,10 @@
 </p>
 
 <p align="center">
+  简体中文 | <a href="README_EN.md">English</a>
+</p>
+
+<p align="center">
   基于 Go + Bubble Tea 构建
 </p>
 
