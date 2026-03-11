@@ -7,7 +7,7 @@ import (
 
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/lipgloss/v2"
-	"github.com/haivo/fileman/internal/types"
+	"github.com/Joehaivo/fileman/internal/types"
 )
 
 // Modal 模态弹窗组件

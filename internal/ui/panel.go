@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/haivo/fileman/internal/fileops"
-	"github.com/haivo/fileman/internal/types"
+	"github.com/Joehaivo/fileman/internal/fileops"
+	"github.com/Joehaivo/fileman/internal/types"
 )
 
 const (
@@ -171,6 +171,26 @@ func (p *Panel) SetCursorByName(name string) {
 			break
 		}
 	}
+}
+
+// SetCursorByY 根据相对 Y 坐标设置光标位置（用于鼠标点击）
+// y 是相对于列表区第一行的坐标（0 开始）
+func (p *Panel) SetCursorByY(y int) {
+	entries := p.visibleEntries()
+	if len(entries) == 0 {
+		return
+	}
+
+	// 计算目标光标位置：offset + y
+	targetCursor := p.Offset + y
+	if targetCursor < 0 {
+		targetCursor = 0
+	}
+	if targetCursor >= len(entries) {
+		targetCursor = len(entries) - 1
+	}
+
+	p.Cursor = targetCursor
 }
 
 // filterEntries 根据搜索关键词过滤文件列表（模糊匹配）

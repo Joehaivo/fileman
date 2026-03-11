@@ -136,6 +136,16 @@ func isExitEdit(msg tea.KeyPressMsg) bool {
 	return msg.String() == "f2"
 }
 
+// isCopyLine 检查是否为复制当前行键（F3）
+func isCopyLine(msg tea.KeyPressMsg) bool {
+	return msg.String() == "f3"
+}
+
+// isCopyAll 检查是否为复制全部内容键（Ctrl+A）
+func isCopyAll(msg tea.KeyPressMsg) bool {
+	return msg.String() == "ctrl+a"
+}
+
 // isToggleHidden 检查是否为切换隐藏文件键（F7）
 func isToggleHidden(msg tea.KeyPressMsg) bool {
 	return msg.String() == "f7"

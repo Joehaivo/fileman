@@ -1,74 +1,105 @@
-# FileMan 
+# FileMan
 
-FileMan 是一个基于 Go 语言和 [Bubble Tea](https://github.com/charmbracelet/bubbletea) 框架构建的现代化终端文件管理器（TUI）。它提供了双面板界面、实时文件预览以及高效的键盘导航，专为追求效率的开发者
+<p align="center">
+  <strong>精美小巧的现代化终端文件管理器</strong>
+</p>
+
+<p align="center">
+  终端文件管理器，基于 Go + Bubble Tea 构建
+</p>
+
+<p align="center">
+  <a href="#-安装">安装</a> •
+  <a href="#-功能特性">功能</a> •
+  <a href="#️-快捷键">快捷键</a> •
+  <a href="#️-技术栈">技术栈</a>
+</p>
+
+---
+
 ## ✨ 功能特性
-- **双面板界面**：经典的左右双栏设计，支持 Tab 键快速切换焦点，文件管理更高效。
-- **实时预览**：支持文本文件内容预览（带行号），自动识别并展示文件详细信息。
-- **图标支持**：集成 Nerd Fonts 图标支持，让终端界面更加美观直观。
-- **文件操作**：支持复制、移动、删除、重命名、新建目录等常用操作，均配有直观的弹窗确认。
-- **快速搜索**：支持当前目录下的模糊搜索与实时过滤。
-- **多选系统**：支持空格键多选文件，方便批量操作。
-- **鼠标支持**：支持鼠标点击选择、滚动列表和预览内容。
-- **现代化 UI**：基于 Lip Gloss 构建的精美界面，自适应终端大小。
 
-## 🛠️ 安装说明
+- **双面板界面** — 经典的左右双栏设计，Tab 键快速切换焦点
+- **实时预览** — 文本文件内容预览，自动识别文件类型
+- **文件操作** — 复制、移动、删除、重命名、新建文件/目录
+- **快速搜索** — 实时过滤当前目录文件
+- **内置编辑** — 文本文件内置编辑器
+- **鼠标支持** — 点击选择、滚动浏览
+- **自适应布局** — 自动适配终端窗口大小
 
-### 环境要求
+## 📦 安装
 
- 推荐使用支持 [Nerd Font](https://www.nerdfonts.com/) 的终端字体以获得最佳体验。
-
-### 使用 Go 安装
+### 一键安装（推荐）
 
 ```bash
-go install github.com/haivo/fileman@latest
+curl -fsSL https://raw.githubusercontent.com/Joehaivo/fileman/main/install.sh | bash
 ```
 
 ### 源码编译
 
 ```bash
-git clone https://github.com/haivo/fileman.git
+git clone https://github.com/Joehaivo/fileman.git
 cd fileman
-go build -o fm .
+go build -ldflags "-s -w -X main.version=$(git describe --tags --always)" -o fm .
 ```
 
-## 🚀 使用指南
-
-运行程序：
+## 🚀 使用
 
 ```bash
-./fm
+fm```
+
+查看版本：
+
+```bash
+fm --version
 ```
 
-### ⌨️ 快捷键列表
+## ⌨️ 快捷键
+
+### 导航
 
 | 按键 | 功能 |
 |------|------|
-| `↑` / `k` | 光标上移 |
-| `↓` / `j` | 光标下移 |
-| `PgUp` / `Ctrl+U` | 上翻页 |
-| `PgDn` / `Ctrl+D` | 下翻页 |
-| `Home` / `g` | 跳转至顶部 |
-| `End` / `G` | 跳转至底部 |
-| `Enter` | 打开目录 / 确认操作 |
-| `Tab` | 切换左右面板焦点 |
-| `Space` | 选中/取消选中当前文件 |
-| `Ctrl+A` | 全选当前目录所有文件 |
-| `/` | 进入搜索模式 |
-| `Esc` | 退出搜索 / 取消弹窗 |
-| `Del` | 删除文件（需确认） |
-| `F2` | 重命名 |
-| `Ctrl+N` | 新建目录 |
-| `F5` | 复制选中项到另一面板 |
-| `F6` | 移动选中项到另一面板 |
-| `Ctrl+E` | 使用 `$EDITOR` 编辑文件 |
-| `Ctrl+Q` | 退出程序 |
+| `↑` / `↓` | 光标上下移动 |
+| `PgUp` / `PgDn` | 翻页 |
+| `Home` / `End` | 跳转顶部/底部 |
+| `←` | 返回上一级目录 |
+| `→` / `Enter` | 进入目录或编辑文件 |
+| `Tab` | 切换左右面板 |
 
-## 🏗️ 技术栈
+### 文件操作
 
-- [Bubble Tea](https://github.com/charmbracelet/bubbletea) - 强大的 TUI 框架
-dd - [Lip Gloss](https://github.com/charmbracelet/lipgloss) - 界面样式定义
-- [Bubbles](https://github.com/charmbracelet/bubbles) - TUI 组件库
+| 按键 | 功能 |
+|------|------|
+| `F1` | 重命名 |
+| `F2` | 复制到另一面板 |
+| `F3` | 移动到另一面板 |
+| `F4` | 新建目录 |
+| `F5` | 新建文件 |
+| `F6` | 外部编辑器打开 |
+| `F7` | 显示/隐藏文件 |
+| `F8` | 设置 |
+| `F9` | 退出 |
+| `Del` | 删除 |
+| `/` | 搜索 |
+| `Esc` | 取消搜索/弹窗 |
+
+### 编辑模式
+
+| 按键 | 功能 |
+|------|------|
+| `↑` `↓` `←` `→` | 移动光标 |
+| `F1` | 保存 |
+| `F2` | 退出编辑 |
+| `Home` / `End` | 行首/行尾 |
+| `PgUp` / `PgDn` | 翻页 |
+
+## 🛠️ 技术栈
+
+- [Bubble Tea v2](https://github.com/charmbracelet/bubbletea) — TUI 框架
+- [Lip Gloss](https://github.com/charmbracelet/lipgloss) — 样式引擎
+- [Bubbles](https://github.com/charmbracelet/bubbles) — UI 组件库
 
 ## 📄 许可证
 
-本项目采用 [MIT](LICENSE) 许可证。
+[MIT](LICENSE)

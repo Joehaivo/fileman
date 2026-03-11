@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/haivo/fileman/internal/types"
+	"github.com/Joehaivo/fileman/internal/types"
 )
 
 const (

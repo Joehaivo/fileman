@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/haivo/fileman/internal/types"
+	"github.com/Joehaivo/fileman/internal/types"
 )
 
 // ScanDir 扫描目录，返回排序后的文件条目列表（目录优先，按名称排序）

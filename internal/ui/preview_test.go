@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/haivo/fileman/internal/fileops"
-	"github.com/haivo/fileman/internal/types"
+	"github.com/Joehaivo/fileman/internal/fileops"
+	"github.com/Joehaivo/fileman/internal/types"
 )
 
 func TestPreviewPane_Render_Wrap(t *testing.T) {

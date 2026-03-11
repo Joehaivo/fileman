@@ -1,15 +1,32 @@
 package ui
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 
 	"charm.land/lipgloss/v2"
 )
 
-// truncatePathHead 省略路径头部，保留尾部
+// homeDir 缓存用户主目录
+var homeDir string
+
+func init() {
+	homeDir, _ = os.UserHomeDir()
+}
+
+// SimplifyPath 简化路径，用 ~ 替换 home 目录
+// 例如: "/home/user/dir/file.txt" -> "~/dir/file.txt"
+func SimplifyPath(path string) string {
+	if homeDir != "" && strings.HasPrefix(path, homeDir) {
+		return "~" + strings.TrimPrefix(path, homeDir)
+	}
+	return path
+}
+
+// TruncatePathHead 省略路径头部，保留尾部
 // 例如: "/very/long/path/to/file.txt" -> "…path/to/file.txt"
-func truncatePathHead(path string, maxDisplayWidth int) string {
+func TruncatePathHead(path string, maxDisplayWidth int) string {
 	if path == "" {
 		return ""
 	}

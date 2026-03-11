@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/haivo/fileman/internal/fileops"
-	"github.com/haivo/fileman/internal/types"
+	"github.com/Joehaivo/fileman/internal/fileops"
+	"github.com/Joehaivo/fileman/internal/types"
 )
 
 const (

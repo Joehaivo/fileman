@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/haivo/fileman/internal/types"
+	"github.com/Joehaivo/fileman/internal/types"
 )
 
 func TestReadPreview_Chinese(t *testing.T) {
 	// Create a temporary file with Chinese content
-	content := []byte("# FileMan TUI 开发进度追踪\n\n## 项目信息\n\n- **二进制名**: `fm`\n- **模块路径**: `github.com/haivo/fileman`")
+	content := []byte("# FileMan TUI 开发进度追踪\n\n## 项目信息\n\n- **二进制名**: `fm`\n- **模块路径**: `github.com/Joehaivo/fileman`")
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test_chinese.md")
 	err := os.WriteFile(tmpFile, content, 0644)

@@ -3,11 +3,12 @@ package app
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/haivo/fileman/internal/fileops"
-	"github.com/haivo/fileman/internal/types"
-	"github.com/haivo/fileman/internal/ui"
+	"github.com/Joehaivo/fileman/internal/fileops"
+	"github.com/Joehaivo/fileman/internal/types"
+	"github.com/Joehaivo/fileman/internal/ui"
 )
 
 const (
@@ -36,13 +37,13 @@ type toastMsg struct{}
 
 // fileOpResultMsg 文件操作结果消息（用于单文件和多文件操作）
 type fileOpResultMsg struct {
-	opType       string                // "copy" 或 "move"
-	srcPath      string                // 单文件操作的源路径
-	dstPath      string                // 单文件操作的目标路径
-	err          error                 // 单文件操作的错误
-	totalCount   int                   // 总文件数（多文件操作）
-	successCount int                   // 成功数（多文件操作）
-	results      []types.FileOpResult  // 多文件操作的结果列表
+	opType       string               // "copy" 或 "move"
+	srcPath      string               // 单文件操作的源路径
+	dstPath      string               // 单文件操作的目标路径
+	err          error                // 单文件操作的错误
+	totalCount   int                  // 总文件数（多文件操作）
+	successCount int                  // 成功数（多文件操作）
+	results      []types.FileOpResult // 多文件操作的结果列表
 }
 
 // progressMsg 进度更新消息
@@ -98,6 +99,11 @@ type Model struct {
 
 	// 初始命令（Init 执行后清空）
 	initCmd tea.Cmd
+
+	// 鼠标点击追踪（双击检测）
+	lastMouseClick time.Time
+	lastClickY     int
+	lastClickPanel int // 0=none, 1=panelA, 2=panelB
 }
 
 // New 创建并初始化 Model
@@ -324,4 +330,76 @@ func (m *Model) navigateTo(path string) tea.Cmd {
 	panel.IsSearching = false
 	panel.Filtered = nil
 	return m.loadPanel(panel)
+}
+
+// 鼠标坐标常量
+const (
+	framePaddingTop      = 2 // 上边框(1) + 上padding(1)
+	headerHeightTotal    = 2 // header(1) + 分隔线(1)
+	footerHeightTotal    = 3 // 分隔线(1) + footer(2)
+	panelSeparatorHeight = 1 // 面板中间分隔线
+	leftPadding          = 2 // 左边框(1) + 左padding(1)
+)
+
+// getClickRegion 判断鼠标点击位于哪个区域
+// 返回: 1=panelA路径, 2=panelA列表, 3=panelB路径, 4=panelB列表, 5=预览区, 0=其他
+func (m *Model) getClickRegion(x, y int) int {
+	if m.width < minWidth || m.height < minHeight {
+		return 0
+	}
+
+	contentWidth := m.width - 6
+	leftWidth := contentWidth * leftRatio / leftDenom
+
+	leftColEnd := leftPadding + leftWidth
+	if x < leftPadding || x > leftColEnd {
+		if x > leftColEnd {
+			return 5 // 预览区
+		}
+		return 0
+	}
+
+	panelHeight := (m.contentHeight - 1) / 2
+	panelAStart := framePaddingTop + headerHeightTotal
+	panelAEnd := panelAStart + panelHeight
+	panelBSeparator := panelAEnd
+	panelBStart := panelBSeparator + panelSeparatorHeight
+	panelBEnd := panelBStart + panelHeight
+
+	relY := y - panelAStart
+
+	if y >= panelAStart && y < panelAEnd {
+		if relY == 0 {
+			return 1 // panelA 路径行
+		}
+		return 2 // panelA 列表区
+	}
+	if y == panelBSeparator {
+		return 0 // 分隔线
+	}
+	if y >= panelBStart && y < panelBEnd {
+		relY = y - panelBStart
+		if relY == 0 {
+			return 3 // panelB 路径行
+		}
+		return 4 // panelB 列表区
+	}
+	return 0
+}
+
+// getPanelListY 获取面板列表区的相对 Y 坐标（从 0 开始，0 是第一行数据）
+func (m *Model) getPanelListY(y int, isPanelA bool) int {
+	panelHeight := (m.contentHeight - 1) / 2
+	panelAStart := framePaddingTop + headerHeightTotal
+
+	if isPanelA {
+		return y - panelAStart - 1 // -1 因为第一行是路径
+	}
+	panelBStart := panelAStart + panelHeight + panelSeparatorHeight
+	return y - panelBStart - 1
+}
+
+// showCopiedToast 显示复制成功的 Toast
+func (m *Model) showCopiedToast(path string) {
+	m.toastMessage = "已复制: " + path
 }

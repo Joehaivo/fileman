@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/haivo/fileman/internal/types"
+	"github.com/Joehaivo/fileman/internal/types"
 )
 
 // FloatingProgressComponent 悬浮进度窗口组件
@@ -91,7 +91,7 @@ func (f *FloatingProgressComponent) Render() string {
 
 		for i := start; i < len(p.Results); i++ {
 			r := p.Results[i]
-			filename := truncatePathHead(r.SrcPath, contentWidth-4)
+			filename := TruncatePathHead(r.SrcPath, contentWidth-4)
 			if r.Err != nil {
 				line := DefaultTheme.ErrorStyle.Render("✗ ") + filename
 				content.WriteString(lipgloss.NewStyle().Width(contentWidth).Render(line))

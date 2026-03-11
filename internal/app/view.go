@@ -5,8 +5,8 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	"github.com/haivo/fileman/internal/types"
-	"github.com/haivo/fileman/internal/ui"
+	"github.com/Joehaivo/fileman/internal/types"
+	"github.com/Joehaivo/fileman/internal/ui"
 )
 
 // View 实现 tea.Model 接口，渲染整个 TUI 界面
@@ -33,7 +33,7 @@ func (m Model) View() tea.View {
 
 		// 如果有 Toast，叠加在右上角
 		if m.toastMessage != "" {
-			content = ui.OverlayTopRight(content, ui.RenderSuccessToast(m.toastMessage, m.width/3), m.width)
+			content = ui.OverlayTopRight(content, ui.RenderSuccessToast(m.toastMessage, m.width/2), m.width)
 		}
 	}
 

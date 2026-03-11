@@ -1,4 +1,4 @@
-module github.com/haivo/fileman
+module github.com/Joehaivo/fileman
 
 go 1.25.4
 

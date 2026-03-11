@@ -7,8 +7,8 @@ import (
 	"charm.land/bubbles/v2/textarea"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	"github.com/haivo/fileman/internal/fileops"
-	"github.com/haivo/fileman/internal/types"
+	"github.com/Joehaivo/fileman/internal/fileops"
+	"github.com/Joehaivo/fileman/internal/types"
 )
 
 // PreviewPane 右侧预览组件，使用 bubbles textarea 实现预览和编辑
@@ -26,6 +26,7 @@ type PreviewPane struct {
 func NewPreviewPane() *PreviewPane {
 	ta := textarea.New()
 	ta.ShowLineNumbers = true
+	ta.MaxHeight = 0 // 取消默认的 99 行限制，允许任意行数的文件编辑
 
 	// 设置自定义样式
 	styles := customTextareaStyles()
@@ -158,6 +159,22 @@ func (pv *PreviewPane) IsModified() bool {
 
 // GetContent 获取编辑内容（用于保存）
 func (pv *PreviewPane) GetContent() string {
+	return pv.Editor.Value()
+}
+
+// GetCurrentLine 获取当前光标所在行的内容
+func (pv *PreviewPane) GetCurrentLine() string {
+	lineNum := pv.Editor.Line()
+	value := pv.Editor.Value()
+	lines := strings.Split(value, "\n")
+	if lineNum >= 0 && lineNum < len(lines) {
+		return lines[lineNum]
+	}
+	return ""
+}
+
+// GetAllContent 获取全部内容（等同于 GetContent）
+func (pv *PreviewPane) GetAllContent() string {
 	return pv.Editor.Value()
 }
 

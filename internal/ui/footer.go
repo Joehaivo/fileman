@@ -44,6 +44,8 @@ func (f *Footer) Render() string {
 			{"↑↓←→", "移动光标"},
 			{"F1", "保存"},
 			{"F2", "退出"},
+			{"F3", "复制行"},
+			{"^A", "复制全部"},
 			{"Home/End", "首/尾"},
 			{"PgUp/PgDn", "翻页"},
 		}
@@ -67,7 +69,7 @@ func (f *Footer) Render() string {
 			hints = append(hints, keyHint{"Enter", "编辑"})
 		}
 		hints = append(hints,
-			keyHint{"Space", "多选"},
+			// keyHint{"Space", "多选"}, // 暂时禁用多选
 			keyHint{"F1", "重命名"},
 			keyHint{"F2", "复制"},
 			keyHint{"F3", "移动"},

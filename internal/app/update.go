@@ -7,9 +7,10 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/haivo/fileman/internal/fileops"
-	"github.com/haivo/fileman/internal/types"
-	"github.com/haivo/fileman/internal/ui"
+	"github.com/Joehaivo/fileman/internal/fileops"
+	"github.com/Joehaivo/fileman/internal/types"
+	"github.com/Joehaivo/fileman/internal/ui"
+	"github.com/atotto/clipboard"
 )
 
 // Update 实现 tea.Model 接口，处理所有消息
@@ -61,6 +62,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyPressMsg:
 		return m.handleKey(msg)
+
+	case tea.MouseClickMsg:
+		return m.handleMouseClick(msg)
+
+	case tea.MouseWheelMsg:
+		return m.handleMouseWheel(msg)
 	}
 
 	return m, nil
@@ -187,8 +194,16 @@ func (m Model) handleSearchKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.isSearching = false
 		m.searchQuery = ""
 		panel := m.activePanel()
+		// 保存当前选中项，退出搜索后重新定位
+		var currentName string
+		if entry := panel.CurrentEntry(); entry != nil {
+			currentName = entry.Name
+		}
 		panel.IsSearching = false
 		panel.SetSearch("")
+		if currentName != "" {
+			panel.SetCursorByName(currentName)
+		}
 		m.header.IsSearching = false
 		m.footer.IsSearching = false
 		m.updatePreview()
@@ -215,6 +230,24 @@ func (m Model) handleSearchKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.activePanel().MoveCursorDown()
 		m.updatePreview()
 		return m, nil
+	}
+
+	if isLeft(msg) {
+		m.isSearching = false
+		panel := m.activePanel()
+		panel.IsSearching = false
+		m.header.IsSearching = false
+		m.footer.IsSearching = false
+		return m.handleGoUp()
+	}
+
+	if isRight(msg) {
+		m.isSearching = false
+		panel := m.activePanel()
+		panel.IsSearching = false
+		m.header.IsSearching = false
+		m.footer.IsSearching = false
+		return m.handleEnter()
 	}
 
 	// Backspace 删除最后一个搜索字符
@@ -255,6 +288,28 @@ func (m Model) handleEditKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	// F2 放弃更改并退出
 	if isExitEdit(msg) {
 		return m.cancelEdit()
+	}
+
+	// F3 复制当前行到剪贴板
+	if isCopyLine(msg) {
+		line := m.preview.GetCurrentLine()
+		if line != "" {
+			_ = clipboard.WriteAll(line)
+			m.showCopiedToast("当前行")
+			return m, m.startToastTimer()
+		}
+		return m, nil
+	}
+
+	// Ctrl+A 复制全部内容到剪贴板
+	if isCopyAll(msg) {
+		content := m.preview.GetAllContent()
+		if content != "" {
+			_ = clipboard.WriteAll(content)
+			m.showCopiedToast("全部内容")
+			return m, m.startToastTimer()
+		}
+		return m, nil
 	}
 
 	// 其他按键交给 textarea 处理
@@ -330,13 +385,14 @@ func (m Model) handleNormalKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m.handleEnter()
 	}
 
-	if isSpace(msg) {
-		m.activePanel().ToggleSelection()
-		m.selectionTotalSize = m.computeSelectionSize()
-		m.activePanel().MoveCursorDown()
-		m.updatePreview()
-		return m, nil
-	}
+	// 暂时禁用多选功能
+	// if isSpace(msg) {
+	// 	m.activePanel().ToggleSelection()
+	// 	m.selectionTotalSize = m.computeSelectionSize()
+	// 	m.activePanel().MoveCursorDown()
+	// 	m.updatePreview()
+	// 	return m, nil
+	// }
 
 	if isRename(msg) {
 		return m.showRenameModal()
@@ -746,18 +802,26 @@ func (m Model) handleFileOpResult(msg fileOpResultMsg) (tea.Model, tea.Cmd) {
 	}
 
 	// 单文件操作成功，显示 Toast
+	// 格式: .../dir/ff.mp3 -> ~/dir2/ff.mp3 复制成功
 	opName := "复制"
 	if msg.opType == "move" {
 		opName = "移动"
 	}
-	filename := filepath.Base(msg.srcPath)
-	m.toastMessage = opName + "完成: " + filename
 
-	// 刷新两个面板并启动 2 秒定时器自动消失
+	// 简化源路径（省略头部）
+	srcDisplay := ui.SimplifyPath(msg.srcPath)
+	srcDisplay = ui.TruncatePathHead(srcDisplay, 50)
+
+	// 简化目标路径（用 ~ 替换 home）
+	dstDisplay := ui.SimplifyPath(msg.dstPath)
+
+	m.toastMessage = srcDisplay + " → " + dstDisplay + " " + opName + "成功"
+
+	// 刷新两个面板并启动 3 秒定时器自动消失
 	return m, tea.Batch(
 		m.loadPanel(m.panelA),
 		m.loadPanel(m.panelB),
-		tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
+		tea.Tick(3*time.Second, func(t time.Time) tea.Msg {
 			return toastMsg{}
 		}),
 	)
@@ -790,4 +854,181 @@ func (m Model) openInEditor() (tea.Model, tea.Cmd) {
 // updatePanelAfterOp 操作完成后刷新面板
 func (m *Model) updatePanelAfterOp(p *ui.Panel) tea.Cmd {
 	return m.loadPanel(p)
+}
+
+// handleMouseClick 处理鼠标点击事件
+func (m Model) handleMouseClick(msg tea.MouseClickMsg) (tea.Model, tea.Cmd) {
+	mouse := msg.Mouse()
+	x, y := mouse.X, mouse.Y
+
+	if m.modal.IsVisible() {
+		return m, nil
+	}
+
+	if m.isEditing {
+		return m.handlePreviewMouseClick(x, y)
+	}
+
+	region := m.getClickRegion(x, y)
+	now := time.Now()
+
+	switch region {
+	case 1: // panelA 路径行
+		m.focus = types.FocusPanelA
+		m.panelA.IsFocused = true
+		m.panelB.IsFocused = false
+		m.copyPathToClipboard(m.panelA.Path)
+		return m, m.startToastTimer()
+
+	case 2: // panelA 列表区
+		m.focus = types.FocusPanelA
+		m.panelA.IsFocused = true
+		m.panelB.IsFocused = false
+		relY := m.getPanelListY(y, true)
+		m.panelA.SetCursorByY(relY)
+		m.updatePreview()
+
+		if m.isDoubleClick(now, y, 1) {
+			return m.handleDoubleClick()
+		}
+		m.lastMouseClick = now
+		m.lastClickY = y
+		m.lastClickPanel = 1
+		return m, nil
+
+	case 3: // panelB 路径行
+		m.focus = types.FocusPanelB
+		m.panelA.IsFocused = false
+		m.panelB.IsFocused = true
+		m.copyPathToClipboard(m.panelB.Path)
+		return m, m.startToastTimer()
+
+	case 4: // panelB 列表区
+		m.focus = types.FocusPanelB
+		m.panelA.IsFocused = false
+		m.panelB.IsFocused = true
+		relY := m.getPanelListY(y, false)
+		m.panelB.SetCursorByY(relY)
+		m.updatePreview()
+
+		if m.isDoubleClick(now, y, 2) {
+			return m.handleDoubleClick()
+		}
+		m.lastMouseClick = now
+		m.lastClickY = y
+		m.lastClickPanel = 2
+		return m, nil
+
+	case 5: // 预览区
+		return m.handlePreviewMouseClick(x, y)
+	}
+
+	return m, nil
+}
+
+// handleMouseWheel 处理鼠标滚轮事件
+func (m Model) handleMouseWheel(msg tea.MouseWheelMsg) (tea.Model, tea.Cmd) {
+	mouse := msg.Mouse()
+	x, y := mouse.X, mouse.Y
+
+	if m.modal.IsVisible() {
+		return m, nil
+	}
+
+	region := m.getClickRegion(x, y)
+
+	switch region {
+	case 2: // panelA 列表区
+		if m.focus != types.FocusPanelA {
+			m.focus = types.FocusPanelA
+			m.panelA.IsFocused = true
+			m.panelB.IsFocused = false
+		}
+		if mouse.Button == tea.MouseWheelUp {
+			m.panelA.MoveCursorUp()
+		} else {
+			m.panelA.MoveCursorDown()
+		}
+		m.updatePreview()
+		return m, nil
+
+	case 4: // panelB 列表区
+		if m.focus != types.FocusPanelB {
+			m.focus = types.FocusPanelB
+			m.panelA.IsFocused = false
+			m.panelB.IsFocused = true
+		}
+		if mouse.Button == tea.MouseWheelUp {
+			m.panelB.MoveCursorUp()
+		} else {
+			m.panelB.MoveCursorDown()
+		}
+		m.updatePreview()
+		return m, nil
+
+	case 5: // 预览区
+		if mouse.Button == tea.MouseWheelUp {
+			m.preview.ScrollUp()
+		} else {
+			m.preview.ScrollDown()
+		}
+		return m, nil
+	}
+
+	return m, nil
+}
+
+// isDoubleClick 检测是否为双击
+func (m *Model) isDoubleClick(now time.Time, y int, panel int) bool {
+	return now.Sub(m.lastMouseClick) < 500*time.Millisecond &&
+		y == m.lastClickY &&
+		panel == m.lastClickPanel
+}
+
+// handleDoubleClick 处理双击事件
+func (m Model) handleDoubleClick() (tea.Model, tea.Cmd) {
+	panel := m.activePanel()
+	entry := panel.CurrentEntry()
+
+	if entry == nil {
+		return m, nil
+	}
+
+	if entry.IsDir {
+		return m, m.navigateTo(entry.Path)
+	}
+
+	if m.preview.IsEditable() {
+		return m.enterEditMode()
+	}
+
+	return m, nil
+}
+
+// handlePreviewMouseClick 处理预览区的鼠标点击
+func (m Model) handlePreviewMouseClick(x, y int) (tea.Model, tea.Cmd) {
+	if !m.isEditing {
+		return m, nil
+	}
+
+	mouseClick := tea.MouseClickMsg{
+		X: x,
+		Y: y,
+	}
+	var cmd tea.Cmd
+	m.preview.Editor, cmd = m.preview.Editor.Update(mouseClick)
+	return m, cmd
+}
+
+// copyPathToClipboard 复制路径到剪贴板
+func (m *Model) copyPathToClipboard(path string) {
+	_ = clipboard.WriteAll(path)
+	m.showCopiedToast(path)
+}
+
+// startToastTimer 启动 Toast 自动消失定时器
+func (m Model) startToastTimer() tea.Cmd {
+	return tea.Tick(3*time.Second, func(t time.Time) tea.Msg {
+		return toastMsg{}
+	})
 }

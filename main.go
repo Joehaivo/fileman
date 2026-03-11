@@ -5,10 +5,19 @@ import (
 	"os"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/haivo/fileman/internal/app"
+	"github.com/Joehaivo/fileman/internal/app"
 )
 
+// 版本信息，通过 -ldflags 在编译时注入
+var version = "dev"
+
 func main() {
+	// 检查版本参数
+	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
+		fmt.Printf("fm version %s\n", version)
+		os.Exit(0)
+	}
+
 	// 初始化 Model（初始命令通过 Init() 方法返回）
 	model, _ := app.New()
 
