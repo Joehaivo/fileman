@@ -5,23 +5,22 @@
 </p>
 
 <p align="center">
-  终端文件管理器，基于 Go + Bubble Tea 构建
+  基于 Go + Bubble Tea 构建
 </p>
 
 <p align="center">
-  <a href="#-安装">安装</a> •
-  <a href="#-功能特性">功能</a> •
-  <a href="#️-快捷键">快捷键</a> •
-  <a href="#️-技术栈">技术栈</a>
+  <img src="docs/fileman-intro.gif" alt="FileMan 演示" width="600" />
 </p>
+
+
 
 ---
 
 ## ✨ 功能特性
 
-- **双面板界面** — 经典的左右双栏设计，Tab 键快速切换焦点
+- **双面板界面** — 上下双面板设计，Tab 键快速切换焦点
 - **实时预览** — 文本文件内容预览，自动识别文件类型
-- **文件操作** — 复制、移动、删除、重命名、新建文件/目录
+- **文件操作** — 利用双面板可将当前文件快速复制/移动到另一面板上、还支持删除、重命名、新建文件/目录
 - **快速搜索** — 实时过滤当前目录文件
 - **内置编辑** — 文本文件内置编辑器
 - **鼠标支持** — 点击选择、滚动浏览
@@ -35,18 +34,12 @@
 curl -fsSL https://raw.githubusercontent.com/Joehaivo/fileman/main/install.sh | bash
 ```
 
-### 源码编译
-
-```bash
-git clone https://github.com/Joehaivo/fileman.git
-cd fileman
-go build -ldflags "-s -w -X main.version=$(git describe --tags --always)" -o fm .
-```
 
 ## 🚀 使用
 
 ```bash
-fm```
+fm
+```
 
 查看版本：
 
@@ -65,7 +58,7 @@ fm --version
 | `Home` / `End` | 跳转顶部/底部 |
 | `←` | 返回上一级目录 |
 | `→` / `Enter` | 进入目录或编辑文件 |
-| `Tab` | 切换左右面板 |
+| `Tab` | 切换上下面板 |
 
 ### 文件操作
 
@@ -93,6 +86,14 @@ fm --version
 | `F2` | 退出编辑 |
 | `Home` / `End` | 行首/行尾 |
 | `PgUp` / `PgDn` | 翻页 |
+
+### 源码编译
+
+```bash
+git clone https://github.com/Joehaivo/fileman.git
+cd fileman
+go build -ldflags "-s -w -X main.version=$(git describe --tags --always)" -o fm .
+```
 
 ## 🛠️ 技术栈
 
