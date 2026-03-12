@@ -7,7 +7,9 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/Joehaivo/fileman/internal/config"
 	"github.com/Joehaivo/fileman/internal/fileops"
+	"github.com/Joehaivo/fileman/internal/i18n"
 	"github.com/Joehaivo/fileman/internal/types"
 	"github.com/Joehaivo/fileman/internal/ui"
 	"github.com/atotto/clipboard"
@@ -36,7 +38,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case fileOpMsg:
 		m.modal.Hide()
 		if msg.err != nil {
-			m.modal.ShowError(msg.err.Error())
+			m.modal.ShowError(msg.err.Error(), m.msg)
 			return m, nil
 		}
 		// 操作成功：刷新两个面板
@@ -133,14 +135,14 @@ func (m Model) handleModalKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 	case types.ModalSettings:
 		if isEnter(msg) {
-			// 保存并应用设置
 			if m.modal.Settings != nil {
 				m.settings = *m.modal.Settings
 				m.panelA.ShowDate = m.settings.ShowDate
 				m.panelB.ShowDate = m.settings.ShowDate
+				m.msg = i18n.GetMessages(m.settings.UseEnglish)
+				_ = config.SaveConfig(&config.Config{UseEnglish: m.settings.UseEnglish})
 			}
 			m.modal.Hide()
-			// 如果显示隐藏文件的设置改变了，需要重新加载面板
 			return m, tea.Batch(
 				m.loadPanel(m.panelA),
 				m.loadPanel(m.panelB),
@@ -157,7 +159,7 @@ func (m Model) handleModalKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 				m.modal.SettingsIdx--
 			}
 		case "down":
-			if m.modal.SettingsIdx < 1 { // 共 2 个设置项，索引 0-1
+			if m.modal.SettingsIdx < 2 {
 				m.modal.SettingsIdx++
 			}
 		case "space":
@@ -167,6 +169,8 @@ func (m Model) handleModalKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 					m.modal.Settings.ShowDate = !m.modal.Settings.ShowDate
 				case 1:
 					m.modal.Settings.ShowHidden = !m.modal.Settings.ShowHidden
+				case 2:
+					m.modal.Settings.UseEnglish = !m.modal.Settings.UseEnglish
 				}
 			}
 		}
@@ -399,12 +403,12 @@ func (m Model) handleNormalKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	}
 
 	if isNewDir(msg) {
-		m.modal.ShowNewDir()
+		m.modal.ShowNewDir(m.msg)
 		return m, nil
 	}
 
 	if isNewFile(msg) {
-		m.modal.ShowNewFile()
+		m.modal.ShowNewFile(m.msg)
 		return m, nil
 	}
 
@@ -421,7 +425,7 @@ func (m Model) handleNormalKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	}
 
 	if isSettings(msg) {
-		m.modal.ShowSettings(m.settings)
+		m.modal.ShowSettings(m.settings, m.msg)
 		return m, nil
 	}
 
@@ -489,7 +493,7 @@ func (m Model) saveEdit() (tea.Model, tea.Cmd) {
 
 	// 保存文件
 	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
-		m.modal.ShowError(err.Error())
+		m.modal.ShowError(err.Error(), m.msg)
 		return m, nil
 	}
 
@@ -551,7 +555,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 // showDeleteConfirm 显示删除确认弹窗
 func (m Model) showDeleteConfirm() (tea.Model, tea.Cmd) {
 	if m.selection.Len() > 0 {
-		m.modal.ShowDelete("", m.selection.Len())
+		m.modal.ShowDelete("", m.selection.Len(), m.msg)
 		return m, nil
 	}
 
@@ -560,7 +564,7 @@ func (m Model) showDeleteConfirm() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	m.modal.ShowDelete(entry.Name, 1)
+	m.modal.ShowDelete(entry.Name, 1, m.msg)
 	return m, nil
 }
 
@@ -589,7 +593,7 @@ func (m Model) showRenameModal() (tea.Model, tea.Cmd) {
 	if entry == nil {
 		return m, nil
 	}
-	m.modal.ShowRename(entry.Name)
+	m.modal.ShowRename(entry.Name, m.msg)
 	return m, nil
 }
 
@@ -797,15 +801,15 @@ func (m Model) handleFileOpResult(msg fileOpResultMsg) (tea.Model, tea.Cmd) {
 
 	// 单文件操作完成
 	if msg.err != nil {
-		m.modal.ShowError(msg.err.Error())
+		m.modal.ShowError(msg.err.Error(), m.msg)
 		return m, nil
 	}
 
 	// 单文件操作成功，显示 Toast
 	// 格式: .../dir/ff.mp3 -> ~/dir2/ff.mp3 复制成功
-	opName := "复制"
+	opName := m.msg.ToastCopySuccess
 	if msg.opType == "move" {
-		opName = "移动"
+		opName = m.msg.ToastMoveSuccess
 	}
 
 	// 简化源路径（省略头部）
@@ -815,7 +819,7 @@ func (m Model) handleFileOpResult(msg fileOpResultMsg) (tea.Model, tea.Cmd) {
 	// 简化目标路径（用 ~ 替换 home）
 	dstDisplay := ui.SimplifyPath(msg.dstPath)
 
-	m.toastMessage = srcDisplay + " → " + dstDisplay + " " + opName + "成功"
+	m.toastMessage = srcDisplay + " → " + dstDisplay + " " + opName
 
 	// 刷新两个面板并启动 3 秒定时器自动消失
 	return m, tea.Batch(

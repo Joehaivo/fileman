@@ -14,14 +14,14 @@ const (
 
 // FileEntry 表示目录中的一个文件或目录条目
 type FileEntry struct {
-	Name    string      // 文件名
-	Size    int64       // 文件大小（字节）
-	ModTime time.Time   // 修改时间
-	Mode    string      // 权限字符串，如 "-rw-r--r--"
-	Type    FileType    // 文件类型
-	IsDir   bool        // 是否为目录
-	Ext     string      // 扩展名（小写，含点，如 ".go"）
-	Path    string      // 完整路径
+	Name    string    // 文件名
+	Size    int64     // 文件大小（字节）
+	ModTime time.Time // 修改时间
+	Mode    string    // 权限字符串，如 "-rw-r--r--"
+	Type    FileType  // 文件类型
+	IsDir   bool      // 是否为目录
+	Ext     string    // 扩展名（小写，含点，如 ".go"）
+	Path    string    // 完整路径
 }
 
 // SelectionSet 多选文件集合，使用 map 实现 O(1) 查找
@@ -68,9 +68,9 @@ func (s SelectionSet) Len() int {
 type FocusTarget int
 
 const (
-	FocusPanelA   FocusTarget = iota // 上方文件面板
-	FocusPanelB                      // 下方文件面板
-	FocusPreview                     // 预览/编辑区
+	FocusPanelA  FocusTarget = iota // 上方文件面板
+	FocusPanelB                     // 下方文件面板
+	FocusPreview                    // 预览/编辑区
 )
 
 // ModalType 模态弹窗类型
@@ -91,15 +91,16 @@ const (
 type Settings struct {
 	ShowDate   bool // 是否显示修改时间
 	ShowHidden bool // 是否显示隐藏文件
+	UseEnglish bool // 是否使用英文界面
 }
 
 // ProgressInfo 复制/移动进度信息
 type ProgressInfo struct {
-	Total     int64   // 总字节数
-	Done      int64   // 已完成字节数
-	Percent   float64 // 进度百分比 0-1
-	FileName  string  // 当前处理文件名
-	IsFinish  bool    // 是否完成
+	Total    int64   // 总字节数
+	Done     int64   // 已完成字节数
+	Percent  float64 // 进度百分比 0-1
+	FileName string  // 当前处理文件名
+	IsFinish bool    // 是否完成
 }
 
 // FileOpResult 单个文件操作结果

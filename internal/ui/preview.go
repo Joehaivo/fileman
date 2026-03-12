@@ -8,6 +8,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/Joehaivo/fileman/internal/fileops"
+	"github.com/Joehaivo/fileman/internal/i18n"
 	"github.com/Joehaivo/fileman/internal/types"
 )
 
@@ -20,6 +21,7 @@ type PreviewPane struct {
 	originalContent string                 // 原始内容（用于修改检测）
 	loaded          bool                   // 是否已加载内容
 	Result          *fileops.PreviewResult // 预览读取结果（用于显示信息）
+	Msg             *i18n.Messages         // 国际化文本
 }
 
 // NewPreviewPane 创建新的预览组件
@@ -94,9 +96,18 @@ func (pv *PreviewPane) SetEntry(entry *types.FileEntry) {
 		if result.Error != "" {
 			pv.Editor.SetValue(result.Error)
 		} else if result.IsBinary {
-			pv.Editor.SetValue("二进制文件，无法预览")
+			if pv.Msg != nil {
+				pv.Editor.SetValue(pv.Msg.PreviewBinary)
+			} else {
+				pv.Editor.SetValue("二进制文件，无法预览")
+			}
 		} else if result.IsTooLarge {
-			pv.Editor.SetValue(result.Error)
+			if pv.Msg != nil {
+				msg := fmt.Sprintf(pv.Msg.PreviewTooLargeFmt, fileops.FormatSize(result.FileSize))
+				pv.Editor.SetValue(msg)
+			} else {
+				pv.Editor.SetValue(fmt.Sprintf("文件过大 (%s)，无法预览", fileops.FormatSize(result.FileSize)))
+			}
 		}
 		pv.Editor.Blur()
 		return
@@ -225,6 +236,9 @@ func (pv *PreviewPane) Render() string {
 // renderEmpty 渲染空状态（无文件选中）
 func (pv *PreviewPane) renderEmpty() string {
 	msg := "选择文件以预览"
+	if pv.Msg != nil {
+		msg = pv.Msg.PreviewSelectFile
+	}
 	style := DefaultTheme.SubduedStyle
 	centered := lipgloss.NewStyle().
 		Width(pv.Width).
@@ -257,7 +271,8 @@ func (pv *PreviewPane) renderInfo() string {
 	label := DefaultTheme.InfoLabelStyle
 	value := DefaultTheme.InfoValueStyle
 
-	typeDesc := fileops.GetFileTypeDesc(*entry)
+	useEnglish := pv.Msg != nil && pv.Msg == i18n.English
+	typeDesc := fileops.GetFileTypeDesc(*entry, useEnglish)
 	sizeStr := fileops.FormatSize(entry.Size)
 	dateStr := entry.ModTime.Format("2006-01-02 15:04:05")
 	modeStr := entry.Mode
@@ -269,12 +284,28 @@ func (pv *PreviewPane) renderInfo() string {
 		progressStr = fmt.Sprintf("%d", total)
 	}
 
+	// 使用国际化标签
+	var labelType, labelSize, labelModified, labelMode, labelLines string
+	if pv.Msg != nil {
+		labelType = pv.Msg.InfoType
+		labelSize = pv.Msg.InfoSize
+		labelModified = pv.Msg.InfoModified
+		labelMode = pv.Msg.InfoMode
+		labelLines = pv.Msg.InfoLines
+	} else {
+		labelType = "类型: "
+		labelSize = "大小: "
+		labelModified = "修改: "
+		labelMode = "权限: "
+		labelLines = "行数: "
+	}
+
 	lines := []string{
-		label.Render("类型: ") + value.Render(typeDesc),
-		label.Render("大小: ") + value.Render(sizeStr),
-		label.Render("修改: ") + value.Render(dateStr),
-		label.Render("权限: ") + value.Render(modeStr),
-		label.Render("行数: ") + value.Render(progressStr),
+		label.Render(labelType) + value.Render(typeDesc),
+		label.Render(labelSize) + value.Render(sizeStr),
+		label.Render(labelModified) + value.Render(dateStr),
+		label.Render(labelMode) + value.Render(modeStr),
+		label.Render(labelLines) + value.Render(progressStr),
 	}
 
 	var sb strings.Builder

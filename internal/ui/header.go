@@ -6,12 +6,8 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"github.com/Joehaivo/fileman/internal/fileops"
+	"github.com/Joehaivo/fileman/internal/i18n"
 	"github.com/Joehaivo/fileman/internal/types"
-)
-
-const (
-	appName    = "文件管家"
-	appVersion = "v0.1.0"
 )
 
 // Header 顶部标题组件
@@ -20,6 +16,7 @@ type Header struct {
 	Selection   types.SelectionSet // 当前选择集
 	IsSearching bool               // 是否处于搜索模式
 	SearchQuery string             // 搜索关键词
+	Msg         *i18n.Messages     // 国际化文本
 }
 
 // NewHeader 创建 Header 组件
@@ -36,18 +33,18 @@ func (h *Header) SetSize(width int) {
 
 // Render 渲染 Header（单行）
 func (h *Header) Render() string {
-	if h.Width <= 0 {
+	if h.Width <= 0 || h.Msg == nil {
 		return ""
 	}
 
 	// 左侧：应用名称 + 版本
 	leftStr := ""
 	if h.IsSearching {
-		leftStr = DefaultTheme.SearchStyle.Render("搜索: ") +
+		leftStr = DefaultTheme.SearchStyle.Render(h.Msg.HeaderSearchLabel) +
 			DefaultTheme.TitleStyle.Render(h.SearchQuery)
 	} else {
-		leftStr = DefaultTheme.TitleStyle.Render(appName) +
-			DefaultTheme.SubduedStyle.Render(" "+appVersion)
+		leftStr = DefaultTheme.TitleStyle.Render(h.Msg.AppName) +
+			DefaultTheme.SubduedStyle.Render(" "+h.Msg.Version)
 	}
 
 	// 右侧：选择统计
@@ -70,39 +67,37 @@ func (h *Header) Render() string {
 
 // renderSelectionInfo 渲染右侧选择统计信息
 func (h *Header) renderSelectionInfo() string {
-	if h.Selection.Len() == 0 {
+	if h.Selection.Len() == 0 || h.Msg == nil {
 		return ""
 	}
 
-	// 统计选中条目的总大小（此处无法直接获取文件大小，仅显示数量）
-	// 在实际应用中，选择集应包含 FileEntry 以便计算大小
 	count := h.Selection.Len()
 	return DefaultTheme.SelectionStyle.Render(
-		fmt.Sprintf("已选: %d 个", count),
+		fmt.Sprintf(h.Msg.HeaderSelectedCount, count),
 	)
 }
 
 // RenderWithSize 渲染包含选中文件大小的 Header
 // totalSize: 所有选中文件的总字节数
 func (h *Header) RenderWithSize(totalSize int64) string {
-	if h.Width <= 0 {
+	if h.Width <= 0 || h.Msg == nil {
 		return ""
 	}
 
 	leftStr := ""
 	if h.IsSearching {
-		leftStr = DefaultTheme.SearchStyle.Render("搜索: ") +
+		leftStr = DefaultTheme.SearchStyle.Render(h.Msg.HeaderSearchLabel) +
 			DefaultTheme.TitleStyle.Render(h.SearchQuery)
 	} else {
-		leftStr = DefaultTheme.TitleStyle.Render(appName) +
-			DefaultTheme.SubduedStyle.Render(" "+appVersion)
+		leftStr = DefaultTheme.TitleStyle.Render(h.Msg.AppName) +
+			DefaultTheme.SubduedStyle.Render(" "+h.Msg.Version)
 	}
 
 	rightStr := ""
 	if h.Selection.Len() > 0 {
 		sizeStr := fileops.FormatSizeTotal(totalSize)
 		rightStr = DefaultTheme.SelectionStyle.Render(
-			fmt.Sprintf("已选: %d 个 (%s)", h.Selection.Len(), sizeStr),
+			fmt.Sprintf(h.Msg.HeaderSelectedCount, h.Selection.Len()) + " (" + sizeStr + ")",
 		)
 	}
 

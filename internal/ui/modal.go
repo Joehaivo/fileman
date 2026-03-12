@@ -1,12 +1,14 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 
 	"image/color"
 
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/lipgloss/v2"
+	"github.com/Joehaivo/fileman/internal/i18n"
 	"github.com/Joehaivo/fileman/internal/types"
 )
 
@@ -22,6 +24,7 @@ type Modal struct {
 	Progress     *types.ProgressInfo // 进度信息（进度型）
 	Settings     *types.Settings     // 设置信息（设置型，临时状态）
 	SettingsIdx  int                 // 设置项当前索引
+	Msg          *i18n.Messages      // 国际化文本
 }
 
 // NewModal 创建新的模态弹窗
@@ -52,60 +55,65 @@ func (m *Modal) IsVisible() bool {
 }
 
 // ShowNewDir 显示新建目录弹窗
-func (m *Modal) ShowNewDir() {
+func (m *Modal) ShowNewDir(msg *i18n.Messages) {
+	m.Msg = msg
 	m.Type = types.ModalNewDir
-	m.Title = "新建目录"
-	m.Message = "请输入目录名称："
+	m.Title = msg.ModalTitleNewDir
+	m.Message = msg.ModalMsgDirName
 	m.HasInput = true
 	m.Input.Reset()
 	m.Input.SetValue("")
-	m.Input.Placeholder = "目录名称"
+	m.Input.Placeholder = msg.ModalMsgDirPlaceholder
 	m.Input.Focus()
 }
 
 // ShowNewFile 显示新建文件弹窗
-func (m *Modal) ShowNewFile() {
+func (m *Modal) ShowNewFile(msg *i18n.Messages) {
+	m.Msg = msg
 	m.Type = types.ModalNewFile
-	m.Title = "新建文件"
-	m.Message = "请输入文件名称："
+	m.Title = msg.ModalTitleNewFile
+	m.Message = msg.ModalMsgFileName
 	m.HasInput = true
 	m.Input.Reset()
 	m.Input.SetValue("")
-	m.Input.Placeholder = "文件名称"
+	m.Input.Placeholder = msg.ModalMsgFilePlaceholder
 	m.Input.Focus()
 }
 
 // ShowRename 显示重命名弹窗
 // currentName: 当前文件名（预填）
-func (m *Modal) ShowRename(currentName string) {
+func (m *Modal) ShowRename(currentName string, msg *i18n.Messages) {
+	m.Msg = msg
 	m.Type = types.ModalRename
-	m.Title = "重命名"
-	m.Message = "请输入新名称："
+	m.Title = msg.ModalTitleRename
+	m.Message = msg.ModalMsgNewName
 	m.HasInput = true
 	m.Input.Reset()
 	m.Input.SetValue(currentName)
-	m.Input.Placeholder = "新名称"
+	m.Input.Placeholder = msg.ModalMsgNewNamePlaceholder
 	m.Input.Focus()
 }
 
 // ShowDelete 显示删除确认弹窗
 // name: 要删除的文件/目录名
 // count: 如果是批量删除，大于 1
-func (m *Modal) ShowDelete(name string, count int) {
+func (m *Modal) ShowDelete(name string, count int, msg *i18n.Messages) {
+	m.Msg = msg
 	m.Type = types.ModalDelete
-	m.Title = "确认删除"
+	m.Title = msg.ModalTitleDelete
 	m.HasInput = false
 	if count > 1 {
-		m.Message = "确定要删除选中的 " + itoa(count) + " 个文件吗？"
+		m.Message = fmt.Sprintf(msg.ModalMsgDeleteMulti, count)
 	} else {
-		m.Message = "确定要删除 \"" + name + "\" 吗？"
+		m.Message = fmt.Sprintf(msg.ModalMsgDeleteSingle, name)
 	}
 }
 
 // ShowError 显示错误弹窗
-func (m *Modal) ShowError(msg string) {
+func (m *Modal) ShowError(msg string, i18nMsg *i18n.Messages) {
+	m.Msg = i18nMsg
 	m.Type = types.ModalError
-	m.Title = "错误"
+	m.Title = i18nMsg.ModalTitleError
 	m.Message = msg
 	m.HasInput = false
 }
@@ -257,48 +265,51 @@ func (m *Modal) renderProgressBar(width int) string {
 
 // renderHints 渲染操作提示
 func (m *Modal) renderHints(width int) string {
+	if m.Msg == nil {
+		return ""
+	}
 	var hints string
 	switch m.Type {
 	case types.ModalDelete:
 		hints = DefaultTheme.KeyHighlight.Render("enter") +
-			DefaultTheme.KeyHintStyle.Render(" 确认删除  ") +
+			DefaultTheme.KeyHintStyle.Render(" "+m.Msg.ModalConfirmDelete+"  ") +
 			DefaultTheme.KeyHighlight.Render("esc") +
-			DefaultTheme.KeyHintStyle.Render(" 取消")
+			DefaultTheme.KeyHintStyle.Render(" "+m.Msg.ModalCancel)
 	case types.ModalError:
 		hints = DefaultTheme.KeyHighlight.Render("enter/esc") +
-			DefaultTheme.KeyHintStyle.Render(" 关闭")
+			DefaultTheme.KeyHintStyle.Render(" "+m.Msg.ModalClose)
 	case types.ModalProgress:
 		if m.Progress != nil && m.Progress.IsFinish {
 			hints = DefaultTheme.KeyHighlight.Render("enter/esc") +
-				DefaultTheme.KeyHintStyle.Render(" 关闭")
+				DefaultTheme.KeyHintStyle.Render(" "+m.Msg.ModalClose)
 		} else {
-			hints = DefaultTheme.SubduedStyle.Render("操作进行中...")
+			hints = DefaultTheme.SubduedStyle.Render(m.Msg.ModalOperating)
 		}
 	case types.ModalSettings:
 		hints = DefaultTheme.KeyHighlight.Render("enter") +
-			DefaultTheme.KeyHintStyle.Render(" 确认  ") +
+			DefaultTheme.KeyHintStyle.Render(" "+m.Msg.ModalConfirm+"  ") +
 			DefaultTheme.KeyHighlight.Render("esc") +
-			DefaultTheme.KeyHintStyle.Render(" 取消  ") +
+			DefaultTheme.KeyHintStyle.Render(" "+m.Msg.ModalCancel+"  ") +
 			DefaultTheme.KeyHighlight.Render("space") +
-			DefaultTheme.KeyHintStyle.Render(" 切换  ") +
+			DefaultTheme.KeyHintStyle.Render(" "+m.Msg.ModalToggle+"  ") +
 			DefaultTheme.KeyHighlight.Render("↑↓") +
-			DefaultTheme.KeyHintStyle.Render(" 选择")
+			DefaultTheme.KeyHintStyle.Render(" "+m.Msg.ModalSelect)
 	default:
 		hints = DefaultTheme.KeyHighlight.Render("enter") +
-			DefaultTheme.KeyHintStyle.Render(" 确认  ") +
+			DefaultTheme.KeyHintStyle.Render(" "+m.Msg.ModalConfirm+"  ") +
 			DefaultTheme.KeyHighlight.Render("esc") +
-			DefaultTheme.KeyHintStyle.Render(" 取消")
+			DefaultTheme.KeyHintStyle.Render(" "+m.Msg.ModalCancel)
 	}
 
 	return lipgloss.NewStyle().Width(width).Render(hints)
 }
 
 // ShowSettings 显示设置弹窗
-func (m *Modal) ShowSettings(currentSettings types.Settings) {
+func (m *Modal) ShowSettings(currentSettings types.Settings, msg *i18n.Messages) {
+	m.Msg = msg
 	m.Type = types.ModalSettings
-	m.Title = "设置"
+	m.Title = msg.ModalTitleSettings
 	m.HasInput = false
-	// 复制设置到临时状态
 	s := currentSettings
 	m.Settings = &s
 	m.SettingsIdx = 0
@@ -306,14 +317,14 @@ func (m *Modal) ShowSettings(currentSettings types.Settings) {
 
 // renderSettingsList 渲染设置列表
 func (m *Modal) renderSettingsList(width int) string {
-	if m.Settings == nil {
+	if m.Settings == nil || m.Msg == nil {
 		return ""
 	}
 
 	var sb strings.Builder
 
 	// 设置项1：展示修改时间
-	label1 := "展示修改时间"
+	label1 := m.Msg.SettingShowDate
 	status1 := "[ ] "
 	if m.Settings.ShowDate {
 		status1 = "[x] "
@@ -332,7 +343,7 @@ func (m *Modal) renderSettingsList(width int) string {
 	sb.WriteByte('\n')
 
 	// 设置项2：显示隐藏文件
-	label2 := "显示隐藏文件"
+	label2 := m.Msg.SettingShowHidden
 	status2 := "[ ] "
 	if m.Settings.ShowHidden {
 		status2 = "[x] "
@@ -348,6 +359,25 @@ func (m *Modal) renderSettingsList(width int) string {
 
 	line2 := style2.Render(cursor2 + status2 + label2)
 	sb.WriteString(line2)
+	sb.WriteByte('\n')
+
+	// 设置项3：切换语言
+	label3 := m.Msg.SettingLanguage
+	status3 := "[ ] "
+	if m.Settings.UseEnglish {
+		status3 = "[x] "
+	}
+
+	style3 := lipgloss.NewStyle().Foreground(ColorForeground)
+	cursor3 := "  "
+
+	if m.SettingsIdx == 2 {
+		style3 = lipgloss.NewStyle().Foreground(ColorSelected).Bold(true)
+		cursor3 = "> "
+	}
+
+	line3 := style3.Render(cursor3 + status3 + label3)
+	sb.WriteString(line3)
 
 	return sb.String()
 }

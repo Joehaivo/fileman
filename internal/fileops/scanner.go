@@ -138,52 +138,111 @@ func FormatSizeTotal(size int64) string {
 }
 
 // GetFileTypeDesc 获取文件类型描述
-func GetFileTypeDesc(entry types.FileEntry) string {
+// useEnglish: 是否使用英文描述
+func GetFileTypeDesc(entry types.FileEntry, useEnglish bool) string {
 	if entry.IsDir {
+		if useEnglish {
+			return "Directory"
+		}
 		return "目录"
 	}
 
+	if useEnglish {
+		extDesc := map[string]string{
+			".go":    "Go source",
+			".js":    "JavaScript",
+			".ts":    "TypeScript",
+			".tsx":   "TypeScript JSX",
+			".jsx":   "JavaScript JSX",
+			".py":    "Python script",
+			".rs":    "Rust source",
+			".c":     "C source",
+			".cpp":   "C++ source",
+			".h":     "C/C++ header",
+			".java":  "Java source",
+			".kt":    "Kotlin source",
+			".swift": "Swift source",
+			".rb":    "Ruby script",
+			".php":   "PHP file",
+			".sh":    "Shell script",
+			".bash":  "Bash script",
+			".zsh":   "Zsh script",
+			".json":  "JSON data",
+			".yaml":  "YAML config",
+			".yml":   "YAML config",
+			".toml":  "TOML config",
+			".ini":   "INI config",
+			".conf":  "Config file",
+			".md":    "Markdown",
+			".txt":   "Text file",
+			".pdf":   "PDF document",
+			".png":   "PNG image",
+			".jpg":   "JPEG image",
+			".jpeg":  "JPEG image",
+			".gif":   "GIF image",
+			".svg":   "SVG image",
+			".mp4":   "MP4 video",
+			".mp3":   "MP3 audio",
+			".zip":   "ZIP archive",
+			".tar":   "TAR archive",
+			".gz":    "Gzip file",
+			".sql":   "SQL script",
+			".html":  "HTML file",
+			".css":   "CSS stylesheet",
+		}
+
+		if desc, ok := extDesc[entry.Ext]; ok {
+			return desc
+		}
+
+		if entry.Ext != "" {
+			return strings.ToUpper(strings.TrimPrefix(entry.Ext, ".")) + " file"
+		}
+
+		return "File"
+	}
+
 	extDesc := map[string]string{
-		".go":   "Go 源文件",
-		".js":   "JavaScript 文件",
-		".ts":   "TypeScript 文件",
-		".tsx":  "TypeScript JSX 文件",
-		".jsx":  "JavaScript JSX 文件",
-		".py":   "Python 脚本",
-		".rs":   "Rust 源文件",
-		".c":    "C 源文件",
-		".cpp":  "C++ 源文件",
-		".h":    "C/C++ 头文件",
-		".java": "Java 源文件",
-		".kt":   "Kotlin 源文件",
+		".go":    "Go 源文件",
+		".js":    "JavaScript 文件",
+		".ts":    "TypeScript 文件",
+		".tsx":   "TypeScript JSX 文件",
+		".jsx":   "JavaScript JSX 文件",
+		".py":    "Python 脚本",
+		".rs":    "Rust 源文件",
+		".c":     "C 源文件",
+		".cpp":   "C++ 源文件",
+		".h":     "C/C++ 头文件",
+		".java":  "Java 源文件",
+		".kt":    "Kotlin 源文件",
 		".swift": "Swift 源文件",
-		".rb":   "Ruby 脚本",
-		".php":  "PHP 文件",
-		".sh":   "Shell 脚本",
-		".bash": "Bash 脚本",
-		".zsh":  "Zsh 脚本",
-		".json": "JSON 数据文件",
-		".yaml": "YAML 配置文件",
-		".yml":  "YAML 配置文件",
-		".toml": "TOML 配置文件",
-		".ini":  "INI 配置文件",
-		".conf": "配置文件",
-		".md":   "Markdown 文档",
-		".txt":  "文本文件",
-		".pdf":  "PDF 文档",
-		".png":  "PNG 图片",
-		".jpg":  "JPEG 图片",
-		".jpeg": "JPEG 图片",
-		".gif":  "GIF 图片",
-		".svg":  "SVG 矢量图",
-		".mp4":  "MP4 视频",
-		".mp3":  "MP3 音频",
-		".zip":  "ZIP 压缩包",
-		".tar":  "TAR 归档",
-		".gz":   "Gzip 压缩文件",
-		".sql":  "SQL 脚本",
-		".html": "HTML 文件",
-		".css":  "CSS 样式文件",
+		".rb":    "Ruby 脚本",
+		".php":   "PHP 文件",
+		".sh":    "Shell 脚本",
+		".bash":  "Bash 脚本",
+		".zsh":   "Zsh 脚本",
+		".json":  "JSON 数据文件",
+		".yaml":  "YAML 配置文件",
+		".yml":   "YAML 配置文件",
+		".toml":  "TOML 配置文件",
+		".ini":   "INI 配置文件",
+		".conf":  "配置文件",
+		".md":    "Markdown 文档",
+		".txt":   "文本文件",
+		".pdf":   "PDF 文档",
+		".png":   "PNG 图片",
+		".jpg":   "JPEG 图片",
+		".jpeg":  "JPEG 图片",
+		".gif":   "GIF 图片",
+		".svg":   "SVG 矢量图",
+		".mp4":   "MP4 视频",
+		".mp3":   "MP3 音频",
+		".zip":   "ZIP 压缩包",
+		".tar":   "TAR 归档",
+		".gz":    "Gzip 压缩文件",
+		".sql":   "SQL 脚本",
+		".html":  "HTML 文件",
+		".css":   "CSS 样式文件",
 	}
 
 	if desc, ok := extDesc[entry.Ext]; ok {

@@ -1,12 +1,15 @@
 package app
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/Joehaivo/fileman/internal/config"
 	"github.com/Joehaivo/fileman/internal/fileops"
+	"github.com/Joehaivo/fileman/internal/i18n"
 	"github.com/Joehaivo/fileman/internal/types"
 	"github.com/Joehaivo/fileman/internal/ui"
 )
@@ -87,6 +90,9 @@ type Model struct {
 	// 应用设置
 	settings types.Settings
 
+	// 国际化文本
+	msg *i18n.Messages
+
 	// 待处理的复制/移动目标路径
 	pendingOpSrc []string
 	pendingOpDst string
@@ -119,9 +125,13 @@ func New() (Model, tea.Cmd) {
 	}
 
 	selection := make(types.SelectionSet)
+	cfg := config.LoadConfig()
 	settings := types.Settings{
-		ShowDate: false,
+		ShowDate:   false,
+		ShowHidden: false,
+		UseEnglish: cfg.UseEnglish,
 	}
+	msg := i18n.GetMessages(settings.UseEnglish)
 
 	header := ui.NewHeader(selection)
 	footer := ui.NewFooter()
@@ -142,6 +152,7 @@ func New() (Model, tea.Cmd) {
 		focus:     types.FocusPanelA,
 		selection: selection,
 		settings:  settings,
+		msg:       msg,
 	}
 
 	// 初始加载两个面板的目录内容，保存为初始命令在 Init 中执行
@@ -230,6 +241,11 @@ func (m *Model) calcSizes() {
 	if m.width <= 0 || m.height <= 0 {
 		return
 	}
+
+	// 设置国际化文本
+	m.header.Msg = m.msg
+	m.footer.Msg = m.msg
+	m.preview.Msg = m.msg
 
 	// 可用内容高度 = 终端高度 - 外框上下边框(2) - 上下padding(2) - 内部水平分隔线
 	// 布局：上框(1) + 上padding(1) + header(1) + 水平分隔(1) + content + 水平分隔(1) + footer(2) + 下padding(1) + 下框(1) = 9行固定
@@ -401,5 +417,9 @@ func (m *Model) getPanelListY(y int, isPanelA bool) int {
 
 // showCopiedToast 显示复制成功的 Toast
 func (m *Model) showCopiedToast(path string) {
-	m.toastMessage = "已复制: " + path
+	if m.msg != nil {
+		m.toastMessage = fmt.Sprintf(m.msg.ToastCopied, path)
+	} else {
+		m.toastMessage = "已复制: " + path
+	}
 }

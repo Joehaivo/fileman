@@ -24,6 +24,7 @@ type PreviewResult struct {
 	TotalLines int      // 总行数
 	IsBinary   bool     // 是否为二进制文件
 	IsTooLarge bool     // 是否超出大小限制
+	FileSize   int64    // 文件大小（用于显示）
 	Error      string   // 错误信息
 }
 
@@ -37,7 +38,7 @@ func ReadPreview(entry types.FileEntry) *PreviewResult {
 	if entry.Size > MaxPreviewSize {
 		return &PreviewResult{
 			IsTooLarge: true,
-			Error:      fmt.Sprintf("文件过大 (%s)，无法预览", FormatSize(entry.Size)),
+			FileSize:   entry.Size,
 		}
 	}
 

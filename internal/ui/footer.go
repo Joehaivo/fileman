@@ -4,14 +4,16 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
+	"github.com/Joehaivo/fileman/internal/i18n"
 )
 
 // Footer 底部快捷键提示组件（两行）
 type Footer struct {
-	Width       int  // 可用宽度
-	IsSearching bool // 是否处于搜索模式
-	IsEditing   bool // 是否处于编辑模式
-	CanEdit     bool // 当前是否可以进入编辑模式
+	Width       int            // 可用宽度
+	IsSearching bool           // 是否处于搜索模式
+	IsEditing   bool           // 是否处于编辑模式
+	CanEdit     bool           // 当前是否可以进入编辑模式
+	Msg         *i18n.Messages // 国际化文本
 }
 
 // NewFooter 创建 Footer 组件
@@ -32,7 +34,7 @@ type keyHint struct {
 
 // Render 渲染 Footer（两行）
 func (f *Footer) Render() string {
-	if f.Width <= 0 {
+	if f.Width <= 0 || f.Msg == nil {
 		return ""
 	}
 
@@ -41,45 +43,45 @@ func (f *Footer) Render() string {
 	if f.IsEditing {
 		// 编辑模式
 		hints = []keyHint{
-			{"↑↓←→", "移动光标"},
-			{"F1", "保存"},
-			{"F2", "退出"},
-			{"F3", "复制行"},
-			{"^A", "复制全部"},
-			{"Home/End", "首/尾"},
-			{"PgUp/PgDn", "翻页"},
+			{"↑↓←→", f.Msg.FooterMoveCursor},
+			{"F1", f.Msg.FooterSave},
+			{"F2", f.Msg.FooterExit},
+			{"F3", f.Msg.FooterCopyLine},
+			{"^A", f.Msg.FooterCopyAll},
+			{"Home/End", f.Msg.FooterHomeEnd},
+			{"PgUp/PgDn", f.Msg.FooterPageUpDown},
 		}
 	} else if f.IsSearching {
 		// 搜索模式
 		hints = []keyHint{
-			{"Enter", "确认"},
-			{"Esc", "取消搜索"},
-			{"↑↓", "选择"},
-			{"Backspace", "删除字符"},
+			{"Enter", f.Msg.FooterConfirm},
+			{"Esc", f.Msg.FooterCancelSearch},
+			{"↑↓", f.Msg.FooterSelect},
+			{"Backspace", f.Msg.FooterDeleteChar},
 		}
 	} else {
 		// 普通模式
 		hints = []keyHint{
-			{"←", "上一级"},
-			{"→", "下一级"},
-			{"Tab", "切换面板"},
-			{"/", "搜索"},
+			{"←", f.Msg.FooterGoUp},
+			{"→", f.Msg.FooterGoDown},
+			{"Tab", f.Msg.FooterSwitchPanel},
+			{"/", f.Msg.FooterSearch},
 		}
 		if f.CanEdit {
-			hints = append(hints, keyHint{"Enter", "编辑"})
+			hints = append(hints, keyHint{"Enter", f.Msg.FooterEdit})
 		}
 		hints = append(hints,
 			// keyHint{"Space", "多选"}, // 暂时禁用多选
-			keyHint{"F1", "重命名"},
-			keyHint{"F2", "复制"},
-			keyHint{"F3", "移动"},
-			keyHint{"F4", "新建目录"},
-			keyHint{"F5", "新建文件"},
-			keyHint{"F6", "外部编辑"},
-			keyHint{"F7", "切换隐藏"},
-			keyHint{"F8", "设置"},
-			keyHint{"F9", "退出"},
-			keyHint{"Del", "删除"},
+			keyHint{"F1", f.Msg.FooterRename},
+			keyHint{"F2", f.Msg.FooterCopy},
+			keyHint{"F3", f.Msg.FooterMove},
+			keyHint{"F4", f.Msg.FooterNewDir},
+			keyHint{"F5", f.Msg.FooterNewFile},
+			keyHint{"F6", f.Msg.FooterExternalEdit},
+			keyHint{"F7", f.Msg.FooterToggleHidden},
+			keyHint{"F8", "设置 Settings"},
+			keyHint{"F9", f.Msg.FooterQuit},
+			keyHint{"Del", f.Msg.FooterDelete},
 		)
 	}
 
