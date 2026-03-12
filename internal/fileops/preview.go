@@ -20,12 +20,16 @@ const (
 
 // PreviewResult 预览结果
 type PreviewResult struct {
-	Lines      []string // 文本行内容
-	TotalLines int      // 总行数
-	IsBinary   bool     // 是否为二进制文件
-	IsTooLarge bool     // 是否超出大小限制
-	FileSize   int64    // 文件大小（用于显示）
-	Error      string   // 错误信息
+	Lines         []string // 文本行内容
+	TotalLines    int      // 总行数
+	IsBinary      bool     // 是否为二进制文件
+	IsTooLarge    bool     // 是否超出大小限制
+	FileSize      int64    // 文件大小（用于显示）
+	Error         string   // 错误信息
+	IsArchive     bool     // 是否为压缩文件
+	ArchiveFormat string   // 压缩格式
+	ArchiveCount  int      // 压缩包内文件数
+	ArchiveSize   int64    // 压缩包解压后大小
 }
 
 // ReadPreview 读取文件预览内容，限制最大 1MB
@@ -33,6 +37,11 @@ type PreviewResult struct {
 func ReadPreview(entry types.FileEntry) *PreviewResult {
 	if entry.IsDir {
 		return &PreviewResult{Error: "目录无法预览"}
+	}
+
+	// 检查是否为压缩文件
+	if isArchive, _ := IsArchiveEntry(entry); isArchive {
+		return ReadArchivePreview(entry)
 	}
 
 	if entry.Size > MaxPreviewSize {

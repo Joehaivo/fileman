@@ -83,6 +83,7 @@ func (pv *PreviewPane) SetEntry(entry *types.FileEntry) {
 
 	if entry == nil || entry.IsDir {
 		pv.Editor.SetValue("")
+		pv.Editor.ShowLineNumbers = true // 恢复默认设置
 		pv.Editor.Blur()
 		return
 	}
@@ -91,8 +92,19 @@ func (pv *PreviewPane) SetEntry(entry *types.FileEntry) {
 	result := fileops.ReadPreview(*entry)
 	pv.Result = result
 
+	// 处理压缩文件
+	if result.IsArchive {
+		content := strings.Join(result.Lines, "\n")
+		pv.Editor.SetValue(content)
+		pv.Editor.ShowLineNumbers = false // 禁用行号避免错位
+		pv.loaded = false                 // 压缩文件不可编辑
+		pv.Editor.Blur()
+		return
+	}
+
 	if result.Error != "" || result.IsBinary || result.IsTooLarge {
 		// 显示错误信息
+		pv.Editor.ShowLineNumbers = false // 错误信息不需要行号
 		if result.Error != "" {
 			pv.Editor.SetValue(result.Error)
 		} else if result.IsBinary {
@@ -115,6 +127,7 @@ func (pv *PreviewPane) SetEntry(entry *types.FileEntry) {
 
 	content := strings.Join(result.Lines, "\n")
 	pv.Editor.SetValue(content)
+	pv.Editor.ShowLineNumbers = true // 普通文本文件显示行号
 	pv.originalContent = content
 	pv.loaded = true
 	pv.Editor.Blur() // 默认预览模式
@@ -122,23 +135,23 @@ func (pv *PreviewPane) SetEntry(entry *types.FileEntry) {
 
 // ScrollUp 预览内容向上滚动
 func (pv *PreviewPane) ScrollUp() {
-	// textarea 内置滚动，这里转发给 editor
-	pv.Editor, _ = pv.Editor.Update(tea.KeyPressMsg{Code: tea.KeyUp})
+	// 直接调用 textarea 的光标移动方法，无需焦点
+	pv.Editor.CursorUp()
 }
 
 // ScrollDown 预览内容向下滚动
 func (pv *PreviewPane) ScrollDown() {
-	pv.Editor, _ = pv.Editor.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	pv.Editor.CursorDown()
 }
 
 // ScrollPageUp 向上翻页
 func (pv *PreviewPane) ScrollPageUp() {
-	pv.Editor, _ = pv.Editor.Update(tea.KeyPressMsg{Code: tea.KeyPgUp})
+	pv.Editor.PageUp()
 }
 
 // ScrollPageDown 向下翻页
 func (pv *PreviewPane) ScrollPageDown() {
-	pv.Editor, _ = pv.Editor.Update(tea.KeyPressMsg{Code: tea.KeyPgDown})
+	pv.Editor.PageDown()
 }
 
 // IsEditable 返回当前文件是否可编辑（文本文件且有预览内容）
@@ -277,35 +290,56 @@ func (pv *PreviewPane) renderInfo() string {
 	dateStr := entry.ModTime.Format("2006-01-02 15:04:05")
 	modeStr := entry.Mode
 
-	// 获取行数信息
-	var progressStr string
-	if pv.Result != nil && !pv.Result.IsBinary && !pv.Result.IsTooLarge && pv.Result.Error == "" {
-		total := pv.Result.TotalLines
-		progressStr = fmt.Sprintf("%d", total)
-	}
-
 	// 使用国际化标签
 	var labelType, labelSize, labelModified, labelMode, labelLines string
+	var labelArchiveFiles, labelArchiveSize string
 	if pv.Msg != nil {
 		labelType = pv.Msg.InfoType
 		labelSize = pv.Msg.InfoSize
 		labelModified = pv.Msg.InfoModified
 		labelMode = pv.Msg.InfoMode
 		labelLines = pv.Msg.InfoLines
+		labelArchiveFiles = pv.Msg.InfoArchiveFiles
+		labelArchiveSize = pv.Msg.InfoArchiveSize
 	} else {
 		labelType = "类型: "
 		labelSize = "大小: "
 		labelModified = "修改: "
 		labelMode = "权限: "
 		labelLines = "行数: "
+		labelArchiveFiles = "文件数: "
+		labelArchiveSize = "解压大小: "
 	}
 
-	lines := []string{
-		label.Render(labelType) + value.Render(typeDesc),
-		label.Render(labelSize) + value.Render(sizeStr),
-		label.Render(labelModified) + value.Render(dateStr),
-		label.Render(labelMode) + value.Render(modeStr),
-		label.Render(labelLines) + value.Render(progressStr),
+	var lines []string
+
+	// 压缩文件特殊处理
+	if pv.Result != nil && pv.Result.IsArchive {
+		archiveTypeDesc := fileops.GetArchiveFormatDesc(pv.Result.ArchiveFormat, useEnglish)
+		archiveSizeStr := fileops.FormatSize(pv.Result.ArchiveSize)
+
+		lines = []string{
+			label.Render(labelType) + value.Render(archiveTypeDesc),
+			label.Render(labelSize) + value.Render(sizeStr),
+			label.Render(labelArchiveFiles) + value.Render(fmt.Sprintf("%d", pv.Result.ArchiveCount)),
+			label.Render(labelArchiveSize) + value.Render(archiveSizeStr),
+			label.Render(labelModified) + value.Render(dateStr),
+		}
+	} else {
+		// 获取行数信息
+		var progressStr string
+		if pv.Result != nil && !pv.Result.IsBinary && !pv.Result.IsTooLarge && pv.Result.Error == "" {
+			total := pv.Result.TotalLines
+			progressStr = fmt.Sprintf("%d", total)
+		}
+
+		lines = []string{
+			label.Render(labelType) + value.Render(typeDesc),
+			label.Render(labelSize) + value.Render(sizeStr),
+			label.Render(labelModified) + value.Render(dateStr),
+			label.Render(labelMode) + value.Render(modeStr),
+			label.Render(labelLines) + value.Render(progressStr),
+		}
 	}
 
 	var sb strings.Builder

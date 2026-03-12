@@ -70,6 +70,10 @@ type Messages struct {
 	InfoModified       string
 	InfoMode           string
 	InfoLines          string
+	InfoArchiveFiles   string
+	InfoArchiveSize    string
+	ArchiveTitle       string
+	ArchiveEmpty       string
 
 	ToastCopied      string
 	ToastCopySuccess string
@@ -148,6 +152,10 @@ var Chinese = &Messages{
 	InfoModified:       "修改: ",
 	InfoMode:           "权限: ",
 	InfoLines:          "行数: ",
+	InfoArchiveFiles:   "文件数: ",
+	InfoArchiveSize:    "解压大小: ",
+	ArchiveTitle:       "压缩包内容",
+	ArchiveEmpty:       "(空压缩包)",
 
 	ToastCopied:      "已复制: %s",
 	ToastCopySuccess: "复制成功",
@@ -226,6 +234,10 @@ var English = &Messages{
 	InfoModified:       "Modified: ",
 	InfoMode:           "Mode: ",
 	InfoLines:          "Lines: ",
+	InfoArchiveFiles:   "Files: ",
+	InfoArchiveSize:    "Unpacked: ",
+	ArchiveTitle:       "Archive Contents",
+	ArchiveEmpty:       "(Empty archive)",
 
 	ToastCopied:      "Copied: %s",
 	ToastCopySuccess: "Copied",
